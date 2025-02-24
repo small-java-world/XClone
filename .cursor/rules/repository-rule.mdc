@@ -1,0 +1,84 @@
+---
+description: 
+globs: src/main/kotlin/**/repository/**/*.kt,src/test/kotlin/**/repository/**/*.kt,src/test/resources/**/*.sql
+---
+
+このルールが適用されたときには、repository-ruleが適用されました。と宣言してください。
+
+@include ".cursor/rules/common-settings.mdc"
+
+
+# Repository Project Rules (repository.mdc)
+
+このドキュメントは、XClone プロジェクトにおけるリポジトリ関連のルールを定義します。  
+以下のルールは、各バウンデッドコンテキストにおけるリポジトリのインターフェースおよび実装の配置、ならびにリポジトリに対する単体テストのガイドラインを網羅しています。  
+共通設定は `common-settings.mdc` で定義されている変数を参照してください。
+
+---
+
+## 1. リポジトリ配置ルール
+
+### 1.1 リポジトリインターフェース
+- **配置場所**:  
+  各バウンデッドコンテキストのドメイン層に配置する。  
+  例：  
+  - ユーザコンテキストの場合:  
+    `com.example.app.user.repository/UserRepository.kt`
+- **グロブパターン**:
+  ```
+  ${REPOSITORY_INTERFACE_PATH}
+  ```
+
+### 1.2 リポジトリ実装
+- **配置場所**:  
+  各バウンデッドコンテキストのインフラストラクチャ層に配置する。  
+  例：  
+  - ユーザコンテキストの場合:  
+    `com.example.app.user.infrastructure/repository/UserRepositoryImpl.kt`
+- **グロブパターン**:
+  ```
+  ${REPOSITORY_IMPL_PATH}
+  ```
+
+---
+
+## 2. リポジトリ単体テストガイドライン
+
+- **テスト対象**:  
+  リポジトリ実装の単体テストは、実際のデータベースとの連携を検証するために、専用のテスト用DBを利用します。
+
+- **テストコードの配置**:  
+  各バウンデッドコンテキストのテストディレクトリ内で、リポジトリ実装テストは以下のパスに配置する。  
+  例:  
+  - `src/test/kotlin/com/example/app/user/repository/infrastructure/repository/UserRepositoryImplTest.kt`
+
+- **テストデータ投入手順**:
+  1. JDBC 経由でテストDBの参照整合性を一時無効化する。
+  2. 既存のテストデータを全削除するSQLを実行する。
+  3. 共通テストデータ（必要なら `${TEST_SQL_PATH}` で指定されたSQLファイル）を実行しデータを投入する。
+  4. 個別テストで必要な追加データは、テストケース内で個別にSQL発行して投入する。
+  5. 全データ投入後、参照整合性を再有効化する。
+
+- **グロブパターン** (テスト用SQLファイル):
+  ```
+  ${TEST_SQL_PATH}
+  ```
+
+---
+
+## 3. 一般ルール
+
+- **共通設定の利用**:  
+  すべてのパスやグロブパターンは、`common-settings.mdc` で定義された変数を参照し、ハードコーディングを避けること。
+
+- **変更管理**:  
+  リポジトリ関連のルール変更は、他のプロジェクトルールファイルと整合性を保つため、共通設定ファイルの更新を伴う形で実施すること。  
+  すべての変更は事前に承認を得ること。
+
+- **ドキュメントとコメント**:  
+  各リポジトリファイルには、その役割と配置意図を明確にするためのコメントを記載し、コードの可読性と保守性を向上させること。
+
+---
+
+# End of Repository Project Rules
+```

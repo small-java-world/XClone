@@ -1,0 +1,170 @@
+---
+description: 
+globs: **/build/generated-src/jooq/**/*.java,src/main/resources/db/migration/**/*.sql,src/test/resources/**/*.sql
+---
+このルールが適用されたときには、jooq-and-flyway-ruleが適用されました。と宣言してください。
+
+@include ".cursor/rules/common-settings.mdc"
+
+# jOOQ and Flyway Project Rules (jooq-and-flyway.mdc)
+
+このドキュメントは、XClone プロジェクトにおける jOOQ と Flyway の設定および運用ルールを定義します。  
+本ルールは、Gradle タスクの設定、生成コードとマイグレーションファイルの管理、ならびにテストデータ投入手順について記載しています。  
+以下の設定値は、共通設定ファイル（common-settings.mdc）で定義されている変数を参照しています。
+
+---
+
+## 1. jOOQ Rules
+
+### 1.1 Gradle Task Settings for jOOQ
+- **jooqGenerate**
+  - **目的**: データベーススキーマに基づき、jOOQ のコードを生成するタスクです。
+  - **実行方法**: `./gradlew jooqGenerate`
+  - **出力先**: 生成コードは `${JOOQ_GENERATED_PATH}` に出力されます。
+  - **自動連携**: このタスクはコンパイル前に自動実行されるよう、Gradle のタスク依存関係を設定してください。
+
+- **cleanJooq**
+  - **目的**: 既存の jOOQ 生成コードをクリーンアップするタスクです。
+  - **実行方法**: `./gradlew cleanJooq`
+
+### 1.2 File Targeting for jOOQ Generated Code
+- **グロブパターン**:
+  - Java コードの場合:
+    ```
+    ${JOOQ_GENERATED_PATH}
+    ```
+  - Kotlin コード（必要に応じて）:
+    ```
+    **/build/generated-src/jooq/**/*.kt
+    ```
+
+---
+
+## 2. Flyway Rules
+
+### 2.1 Gradle Task Settings for Flyway
+- **flywayMigrate**
+  - **目的**: `${FLYWAY_MIGRATION_PATH}` に配置された冪等性のある SQL マイグレーションファイルを用いて、データベーススキーマを最新状態に更新します。
+  - **実行方法**: `./gradlew flywayMigrate`
+
+- **flywayClean**
+  - **目的**: 開発・テスト環境用にデータベースを完全にクリーンアップするタスクです（本番環境では使用しません）。
+  - **実行方法**: `./gradlew flywayClean`
+
+- **flywayInfo**
+  - **目的**: 現在のマイグレーション状態を表示します。
+  - **実行方法**: `./gradlew flywayInfo`
+
+### 2.2 File Targeting for Flyway Migration Files
+- **グロブパターン**:
+  ```
+  ${FLYWAY_MIGRATION_PATH}
+  ```
+
+### 2.3 Additional Flyway Rules
+- **テスト環境用マイグレーション禁止**:  
+  `src/test/resources/db/migration` にはマイグレーションファイルを作成してはなりません。
+- **テストデータ投入について**:  
+  テストデータが必要な場合は、各テストケースで個別に SQL を発行してデータを投入する方式を採用してください。
+
+---
+
+## 3. Test Data Injection Guidelines (Backend UT)
+
+- **テスト用DBの利用**:  
+  単体テスト実行時は専用のテスト用データベースを使用し、実際の SQL を発行して検証します。
+
+- **共通テストデータ投入の手順**:
+  1. JDBC 経由で DB の参照整合性を一時無効化する。
+  2. 既存のテストデータを全削除する SQL を実行する。
+  3. 共通テストデータ SQL ファイル（例：`${TEST_SQL_PATH}`）を実行し、データを投入する。
+  4. 各テストケースで必要な追加データは、個別に SQL を発行して投入する。
+  5. 全データ投入後、DB の参照整合性を再有効化する.
+
+- **対象ファイルのグロブパターン**:
+  ```
+  ${TEST_SQL_PATH}
+  ```
+
+---
+
+## 4. Integration with Other Rules
+
+- **Repository Configuration**:  
+  ※ リポジトリの配置ルールについては、別途 repository.mdc に記載される内容と連携させること。
+  - リポジトリインターフェース: `${REPOSITORY_INTERFACE_PATH}`
+  - リポジトリ実装: `${REPOSITORY_IMPL_PATH}`
+
+- **API Version Management**:  
+  API クライアント、型定義、環境設定は、それぞれ `app/lib/api/client.ts`, `types.ts`, `config.ts` で一元管理し、変更禁止です。
+
+---
+
+## 5. Globs for File Targets Summary
+
+- **jOOQ 生成コード**:  
+  ```
+  ${JOOQ_GENERATED_PATH}
+  ```
+- **Flyway マイグレーションファイル**:  
+  ```
+  ${FLYWAY_MIGRATION_PATH}
+  ```
+- **テスト用SQLファイル**:  
+  ```
+  ${TEST_SQL_PATH}
+  ```
+- **Repository インターフェース**:  
+  ```
+  ${REPOSITORY_INTERFACE_PATH}
+  ```
+- **Repository 実装**:  
+  ```
+  ${REPOSITORY_IMPL_PATH}
+  ```
+
+---
+
+## 6. Quality Management and Reporting
+
+- **検証とログ分析**:
+  - 各タスク完了後、ログやデバッグ情報を確認し、エラーや不整合がないか検証する。
+  - 問題発生時は、原因分析、対策案の提示、実施および修正後の再検証を行う。
+
+- **報告フォーマット**:
+  ```markdown
+  # 実行結果報告
+
+  ## 概要
+  [全体の要約を記述]
+
+  ## 実行ステップ
+  1. [ステップ1の説明と結果]
+  2. [ステップ2の説明と結果]
+  ...
+
+  ## 最終成果物
+  [成果物の詳細やリンク]
+
+  ## 課題対応
+  - 発生した問題とその対応
+  - 今後の注意点
+
+  ## 注意点・改善提案
+  - [改善点や提案事項]
+  ```
+
+---
+
+## 7. Additional Project Rules
+
+- API クライアント、型定義、環境設定は `app/lib/api/client.ts`, `types.ts`, `config.ts` で管理し、変更禁止です。
+- すべての変更は事前に承認を得ること。
+- UI/UX の変更（レイアウト、色、フォント、間隔など）は禁止。必要な場合は理由を明示し、承認を得ること。
+
+---
+
+# End of XClone Project Rules: jOOQ & Flyway
+```
+
+この単一のマークダウンファイルは、common-settings.mdc の内容を前提として、jOOQ と Flyway に関するすべてのプロジェクトルールをまとめたものです。これにより、ルールの変更や拡張が容易になり、保守性が向上します。

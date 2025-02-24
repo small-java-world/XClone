@@ -1,0 +1,84 @@
+---
+description: 
+globs: 
+---
+```markdown
+# Common Settings for XClone Project Rules
+
+このファイルは、XClone プロジェクトルールで使用する共通設定を定義します。  
+すべてのルールファイルは、このファイルを `@include` で読み込むことで、設定値の一元管理と保守性の向上を図ります。
+
+---
+
+## 1. Paths and Globs
+
+- **FLYWAY_MIGRATION_PATH**  
+  本番環境用の Flyway マイグレーションファイルの格納場所。  
+  **値**:
+  ```
+  src/main/resources/db/migration/**/*.sql
+  ```
+
+- **JOOQ_GENERATED_PATH**  
+  jOOQ により生成されたコードの出力ディレクトリ。  
+  **値**:
+  ```
+  **/build/generated-src/jooq/**/*.java
+  ```
+  ※ Kotlin を使用している場合は、必要に応じて `**/build/generated-src/jooq/**/*.kt` も使用可能。
+
+- **REPOSITORY_INTERFACE_PATH**  
+  各バウンデッドコンテキストのドメイン層に配置されたリポジトリのインターフェースファイルのパス。  
+  **値**:
+  ```
+  **/repository/**/*.kt
+  ```
+
+- **REPOSITORY_IMPL_PATH**  
+  各バウンデッドコンテキストのインフラストラクチャ層（infrastructure）に配置されたリポジトリ実装ファイルのパス。  
+  **値**:
+  ```
+  **/infrastructure/repository/**/*.kt
+  ```
+
+- **TEST_SQL_PATH**  
+  テスト用の SQL ファイル（テストデータ投入用）のパス。  
+  **値**:
+  ```
+  src/test/resources/**/*.sql
+  ```
+
+---
+
+## 2. Gradle Task Names
+
+- **jOOQ Tasks**:
+  - Code Generation: `jooqGenerate`
+  - Clean Generated Code: `cleanJooq`
+
+- **Flyway Tasks**:
+  - Migrate: `flywayMigrate`
+  - Clean (開発/テスト環境用): `flywayClean`
+  - Info: `flywayInfo`
+
+---
+
+## 3. Additional Settings
+
+- **TEST_DB_CONFIG**  
+  （オプション）テスト用DBの設定を必要に応じて環境変数やプロパティで管理する場合に参照する変数を定義可能。
+
+---
+
+## 4. Usage Instructions
+
+- このファイルは、各プロジェクトルールファイルの先頭で以下のようにインクルードしてください：
+  ```plaintext
+  @include ".cursor/rules/common-settings.mdc"
+  ```
+- すべてのルールファイル内で、上記の変数（例：`${FLYWAY_MIGRATION_PATH}`）を参照することで、ハードコーディングを回避し、変更時の保守性を向上させます。
+
+---
+
+# End of Common Settings
+```
