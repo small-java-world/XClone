@@ -1,0 +1,436 @@
+```markdown
+# .cursorrules
+
+あなたは高度な問題解決能力を持つAIアシスタントです。以下の指示に従い、効率的かつ正確にタスクを遂行してください。
+
+---
+
+## 1. 指示の分析と計画
+
+### タスク分析
+- **主要なタスクの要約**:
+  - 最新の設計書（X(旧Twitter)クローンアプリ）に基づき、各技術スタック（バックエンド：Kotlin 2.x, Spring Boot ^3.1.3, jOOQ ^3.18.2, kotlin‑logging ^3.0.5, Kotest ^5.6.2, Mockk ^1.13.5; フロントエンド：Next.js ^15.1.3, React ^19.0.0, Tailwind CSS ^3.4.17, shadcn/ui ^2.1.8, Vitest; DB: MySQL 8.0.33, オブジェクトストレージ: MinIO）とそのバージョン情報を反映する。
+  - リポジトリの実装に関して、インターフェースはドメイン層に、実装はインフラストラクチャ層（infrastructure/repository）に配置するルールを適用する。
+  - バックエンドの単体テストでは、専用のテスト用DBを利用し、共通テストデータを事前に定義したSQLファイルから投入する手順（参照整合性の無効化、全削除、共通データ投入、参照整合性再有効化）を自動化する。
+  - フロントエンドのUTおよび独立したE2Eテスト（Playwright）のルールも含める。
+
+### 重要な要件と制約
+- **技術スタックのバージョン**:
+  - Java 21、Kotlin 2.x、Next.js ^15.1.3、React ^19.0.0、MySQL 8.0.33 など、最新安定版に基づく（変更禁止項目は厳守）。
+- **リポジトリの配置**:
+  - インターフェースは各バウンデッドコンテキストのドメイン層に配置し、実装は `**/infrastructure/repository/**/*.kt` というワイルドカードパターンで一括ルール適用する。
+- **テスト戦略**:
+  - バックエンドUTでは、実際のSQL発行を伴うテスト用DBを利用し、共通テストデータSQL（例：`src/test/resources/**/*.sql`）をJDBC経由で投入する。
+  - テスト前に参照整合性を無効化、データの削除・投入後に再有効化する手順を自動化する。
+- **API クライアント、型定義、環境設定**:
+  - これらは `app/lib/api/client.ts`, `types.ts`, `config.ts` に一元管理し、変更禁止とする。
+
+### 実行ステップ
+1. 各技術の最新安定版（Java 21、Kotlin 2.x、MySQL 8.0.33、jOOQ ^3.18.2、Spring Boot ^3.1.3、kotlin‑logging ^3.0.5、Kotest ^5.6.2、Mockk ^1.13.5、Next.js ^15.1.3、React ^19.0.0、Tailwind CSS ^3.4.17、shadcn/ui ^2.1.8 等）をネットで調査する。
+2. 調査結果に基づき、設計書および本ルール内の技術スタックセクションを更新する。
+3. リポジトリに関して、インターフェースはドメイン層に、実装は `infrastructure/repository` 配下に配置するルールを設定する。
+4. バックエンドUTでは、テスト用DB利用と共通テストデータの投入（参照整合性の無効化・削除・SQL投入・再有効化）を必ず実施する。
+5. 各ステップ完了後、進捗と検証結果を報告する。
+
+---
+
+## 2. 品質管理と問題対応
+
+- **検証とログ分析**:
+  - 各タスク完了後、ログやデバッグ情報を確認し、エラーや不整合がないか検証する。
+  - 問題発生時は、原因切り分け、対策案の提示、実施、修正後の動作検証を行う。
+
+- **報告フォーマット**:
+  ```markdown
+  # 実行結果報告
+
+  ## 概要
+  [全体の要約を記述]
+
+  ## 実行ステップ
+  1. [ステップ1の説明と結果]
+  2. [ステップ2の説明と結果]
+  ...
+
+  ## 最終成果物
+  [成果物の詳細やリンク]
+
+  ## 課題対応
+  - 発生した問題とその対応
+  - 今後の注意点
+
+  ## 注意点・改善提案
+  - [改善点や提案事項]
+  ```
+
+---
+
+## 3. 最終確認と結果報告
+
+- 全タスク完了後、成果物全体（設計書、ソースコード、テストコード、設定ファイル）が当初の指示および技術スタック制約に沿っているか確認する。
+- 最終結果を上記フォーマットに従い、必要に応じて承認を得る。
+
+---
+
+## 4. 技術スタック（最新バージョン）
+
+### コア技術
+- **TypeScript**: ^5.0.0  
+- **Node.js**: ^20.0.0  
+- **Java**: 21  
+- **Kotlin**: 2.x  
+- **AIモデル**: Claude-3-Sonnet-20241022 (Anthropic Messages API 2023-06-01) ← 変更禁止
+
+### フロントエンド
+- **Next.js**: ^15.1.3  
+- **React**: ^19.0.0  
+- **Tailwind CSS**: ^3.4.17  
+- **shadcn/ui**: ^2.1.8
+
+### バックエンド
+- **MySQL**: 8.0.33  
+- **jOOQ**: ^3.18.2  
+- **Spring Boot**: ^3.1.3  
+- **kotlin‑logging**: ^3.0.5  
+- **Kotest**: ^5.6.2  
+- **Mockk**: ^1.13.5
+
+### 開発ツール
+- **npm**: ^10.0.0  
+- **ESLint**: ^9.0.0  
+- **TypeScript**: ^5.0.0
+
+---
+
+## 5. API バージョン管理（変更禁止）
+- APIクライアントは `app/lib/api/client.ts`、型定義は `types.ts`、環境設定は `config.ts` で一元管理。これらのファイルは変更禁止です。
+
+---
+
+## 6. プロジェクト構成（ディレクトリ構成例）
+
+```
+project-root/
+├── backend/
+│   ├── build.gradle.kts
+│   ├── Dockerfile
+│   └── src/
+│       ├── main/
+│       │   ├── kotlin/
+│       │   │   └── com/
+│       │   │       └── example/
+│       │   │           └── app/
+│       │   │               ├── Application.kt
+│       │   │               ├── config/
+│       │   │               ├── integration/              // 統合用ドメインサービス
+│       │   │               │   └── TweetNotificationIntegrationService.kt
+│       │   │               ├── user/
+│       │   │               │   ├── adapter/
+│       │   │               │   │   ├── controller/
+│       │   │               │   │   │   └── UserController.kt
+│       │   │               │   │   └── event/
+│       │   │               │   │       └── UserEventListener.kt
+│       │   │               │   ├── domain/
+│       │   │               │   │   ├── event/
+│       │   │               │   │   │   ├── UserRegisteredEvent.kt
+│       │   │               │   │   │   └── UserProfileUpdatedEvent.kt
+│       │   │               │   │   ├── model/
+│       │   │               │   │   │   ├── User.kt
+│       │   │               │   │   │   ├── Follow.kt
+│       │   │               │   │   │   └── UserProfile.kt
+│       │   │               │   │   └── valueobject/
+│       │   │               │   │       ├── EmailAddress.kt
+│       │   │               │   │       ├── UserName.kt
+│       │   │               │   │       └── Password.kt
+│       │   │               │   ├── factory/
+│       │   │               │   │   └── UserFactory.kt
+│       │   │               │   ├── usecase/
+│       │   │               │   │   ├── RegisterUserCommand.kt
+│       │   │               │   │   ├── UpdateUserProfileCommand.kt
+│       │   │               │   │   └── UserUsecase.kt
+│       │   │               │   └── repository/                   // リポジトリインターフェース
+│       │   │               │       └── UserRepository.kt
+│       │   │               ├── user/
+│       │   │               │   └── infrastructure/               // リポジトリ実装はインフラストラクチャ層
+│       │   │               │       └── repository/
+│       │   │               │           └── UserRepositoryImpl.kt
+│       │   │               ├── tweet/
+│       │   │               │   ├── adapter/
+│       │   │               │   │   ├── controller/
+│       │   │               │   │   │   └── TweetController.kt
+│       │   │               │   │   └── event/
+│       │   │               │   │       └── TweetEventListener.kt
+│       │   │               │   ├── domain/
+│       │   │               │   │   ├── event/
+│       │   │               │   │   │   ├── TweetPostedEvent.kt
+│       │   │               │   │   │   ├── TweetEditedEvent.kt
+│       │   │               │   │   │   └── TweetDeletedEvent.kt
+│       │   │               │   │   ├── model/
+│       │   │               │   │   │   ├── Tweet.kt
+│       │   │               │   │   │   ├── Like.kt
+│       │   │               │   │   │   ├── Retweet.kt
+│       │   │               │   │   │   └── Media.kt
+│       │   │               │   │   └── valueobject/
+│       │   │               │   │       ├── TweetText.kt
+│       │   │               │   │       ├── MediaUrl.kt
+│       │   │               │   │       └── MediaType.kt
+│       │   │               │   ├── factory/
+│       │   │               │   │   └── TweetFactory.kt
+│       │   │               │   ├── usecase/
+│       │   │               │   │   ├── PostTweetCommand.kt
+│       │   │               │   │   ├── EditTweetCommand.kt
+│       │   │               │   │   └── TweetUsecase.kt
+│       │   │               │   └── repository/                   // リポジトリインターフェース
+│       │   │               │       └── TweetRepository.kt
+│       │   │               ├── tweet/
+│       │   │               │   └── infrastructure/               // リポジトリ実装
+│       │   │               │       └── repository/
+│       │   │               │           └── TweetRepositoryImpl.kt
+│       │   │               ├── notification/
+│       │   │               │   ├── adapter/
+│       │   │               │   │   ├── controller/
+│       │   │               │   │   │   └── NotificationController.kt
+│       │   │               │   │   └── event/
+│       │   │               │   │       └── NotificationEventListener.kt
+│       │   │               │   ├── domain/
+│       │   │               │   │   ├── event/
+│       │   │               │   │   │   └── NotificationCreatedEvent.kt
+│       │   │               │   │   ├── model/
+│       │   │               │   │   │   └── Notification.kt
+│       │   │               │   │   └── valueobject/
+│       │   │               │   │       ├── NotificationType.kt
+│       │   │               │   │       └── NotificationContent.kt
+│       │   │               │   ├── factory/
+│       │   │               │   │   └── NotificationFactory.kt
+│       │   │               │   ├── usecase/
+│       │   │               │   │   ├── CreateNotificationCommand.kt
+│       │   │               │   │   └── NotificationUsecase.kt
+│       │   │               │   └── repository/                   // リポジトリインターフェース
+│       │   │               │       └── NotificationRepository.kt
+│       │   │               ├── notification/
+│       │   │               │   └── infrastructure/               // リポジトリ実装
+│       │   │               │       └── repository/
+│       │   │               │           └── NotificationRepositoryImpl.kt
+│       │   └── resources/
+│       │       └── application.yml
+│       └── test/
+│           └── kotlin/
+│               └── com/
+│                   └── example/
+│                       ├── user/
+│                       │   ├── adapter/controller/
+│                       │   │   └── UserControllerTest.kt
+│                       │   ├── domain/model/
+│                       │   │   └── UserTest.kt
+│                       │   ├── domain/event/
+│                       │   │   └── UserEventTest.kt
+│                       │   ├── domain/valueobject/
+│                       │   │   ├── EmailAddressTest.kt
+│                       │   │   ├── UserNameTest.kt
+│                       │   │   └── PasswordTest.kt
+│                       │   ├── usecase/
+│                       │   │   └── UserUsecaseTest.kt
+│                       │   └── repository/
+│                       │       └── infrastructure/
+│                       │           └── repository/
+│                       │               └── UserRepositoryImplTest.kt
+│                       ├── tweet/
+│                       │   ├── adapter/controller/
+│                       │   │   └── TweetControllerTest.kt
+│                       │   ├── domain/model/
+│                       │   │   └── TweetTest.kt
+│                       │   ├── domain/event/
+│                       │   │   └── TweetEventTest.kt
+│                       │   ├── domain/valueobject/
+│                       │   │   ├── TweetTextTest.kt
+│                       │   │   ├── MediaUrlTest.kt
+│                       │   │   └── MediaTypeTest.kt
+│                       │   ├── usecase/
+│                       │   │   └── TweetUsecaseTest.kt
+│                       │   └── repository/
+│                       │       └── infrastructure/
+│                       │           └── repository/
+│                       │               └── TweetRepositoryImplTest.kt
+│                       └── notification/
+│                           ├── adapter/controller/
+│                           │   └── NotificationControllerTest.kt
+│                           ├── domain/model/
+│                           │   └── NotificationTest.kt
+│                           ├── domain/event/
+│                           │   └── NotificationEventTest.kt
+│                           ├── domain/valueobject/
+│                           │   ├── NotificationTypeTest.kt
+│                           │   └── NotificationContentTest.kt
+│                           ├── usecase/
+│                           │   └── NotificationUsecaseTest.kt
+│                           └── repository/
+│                               └── infrastructure/
+│                                   └── repository/
+│                                       └── NotificationRepositoryImplTest.kt
+├── frontend/
+│   ├── package.json
+│   ├── next.config.js
+│   ├── pages/
+│   │   ├── index.tsx
+│   │   ├── user.tsx
+│   │   ├── tweet.tsx
+│   │   └── notification.tsx
+│   ├── components/
+│   │   ├── HomeScreen/
+│   │   │   ├── containers/
+│   │   │   │   └── HomeContainer.tsx
+│   │   │   └── presentational/
+│   │   │       ├── Header.tsx
+│   │   │       ├── Footer.tsx
+│   │   │       └── MainContent.tsx
+│   │   ├── UserScreen/
+│   │   │   ├── containers/
+│   │   │   │   └── UserContainer.tsx
+│   │   │   └── presentational/
+│   │   │       ├── UserProfile.tsx
+│   │   │       └── UserPosts.tsx
+│   │   ├── TweetScreen/
+│   │   │   ├── containers/
+│   │   │   │   └── TweetContainer.tsx
+│   │   │   └── presentational/
+│   │   │       ├── TweetItem.tsx
+│   │   │       └── TweetDetail.tsx
+│   │   └── NotificationScreen/
+│   │       ├── containers/
+│   │       │   └── NotificationContainer.tsx
+│   │       └── presentational/
+│   │           ├── NotificationItem.tsx
+│   │           └── NotificationList.tsx
+│   ├── hooks/
+│   │   └── useNotificationPolling.ts
+│   ├── utils/
+│   │   └── apiClient.ts
+│   └── tests/
+│       ├── HomeScreen/
+│       │   ├── containers/
+│       │   │   └── HomeContainer.test.tsx
+│       │   └── presentational/
+│       │       ├── Header.test.tsx
+│       │       ├── Footer.test.tsx
+│       │       └── MainContent.test.tsx
+│       ├── UserScreen/
+│       │   ├── containers/
+│       │   │   └── UserContainer.test.tsx
+│       │   └── presentational/
+│       │       ├── UserProfile.test.tsx
+│       │       └── UserPosts.test.tsx
+│       ├── TweetScreen/
+│       │   ├── containers/
+│       │   │   └── TweetContainer.test.tsx
+│       │   └── presentational/
+│       │       ├── TweetItem.test.tsx
+│       │       └── TweetDetail.test.tsx
+│       └── NotificationScreen/
+│           ├── containers/
+│           │   └── NotificationContainer.test.tsx
+│           └── presentational/
+│               ├── NotificationItem.test.tsx
+│               └── NotificationList.test.tsx
+├── e2e/
+│   ├── package.json
+│   ├── playwright.config.ts
+│   └── tests/
+│       └── e2e.test.ts       // バックエンドとフロントエンドの連携シナリオを記述
+└── README.md
+```
+
+---
+
+## 10. DBマイグレーション
+
+- **ツール**: Flyway を利用
+- **格納場所**:  
+  - マイグレーションファイルは `src/main/resources/db/migration` に配置する。
+  - 必要に応じ、テスト環境用は `src/test/resources/db/migration` に配置する。
+- **運用方法**:  
+  - 冪等性のある SQL を用いてスキーマ更新やテーブル追加を記述する。
+  - アプリケーション起動時、Flyway が自動的にこれらのマイグレーションファイルを検出して実行する。
+
+---
+
+## 11. 結果報告例
+
+```markdown
+# 実行結果報告
+
+## 概要
+X(旧Twitter)クローンアプリの設計およびテスト戦略の見直しを完了し、最新の各種バージョン情報に基づいた設計書および .cursorrules を作成しました。特に、リポジトリの実装はインフラストラクチャ層に配置し、UTでは専用のテスト用DBを利用、共通テストデータはSQLファイルによる自動投入を実現しています。
+
+## 実行ステップ
+1. 各種技術の最新安定版（Java 21、Kotlin 2.x、MySQL 8.0.33、jOOQ ^3.18.2、Spring Boot ^3.1.3、kotlin‑logging ^3.0.5、Kotest ^5.6.2、Mockk ^1.13.5、Next.js ^15.1.3、React ^19.0.0、Tailwind CSS ^3.4.17、shadcn/ui ^2.1.8 等）を調査し、設計書および .cursorrules の技術スタック情報を更新。
+2. 統合用ドメインサービス（TweetNotificationIntegrationService）の設計と実装例を追加し、TweetEventListenerから統合サービスを呼び出す設計に変更。
+3. リポジトリのインターフェースは各ドメイン層に、実装は `infrastructure/repository` 配下に配置するルールを導入。
+4. バックエンドのUTにおいて、専用テスト用DBの利用、共通テストデータ（SQLファイル）の投入手順（参照整合性の無効化、削除、投入、再有効化）をルールとして確立。
+5. Docker Compose 設定ファイルおよび Spring Boot の application.yml を最新環境に合わせて更新し、MySQL と MinIO の環境を構築。
+6. 最終確認として、ディレクトリ構成、依存関係、技術スタックのバージョン、APIバージョン管理の制約が守られていることを確認。
+
+## 最終成果物
+- 完成版設計書（本ドキュメントおよび .cursorrules）
+- Docker Compose 設定ファイル（docker-compose.yml）
+- Spring Boot 設定ファイル（application.yml）
+- Flyway マイグレーションファイル（src/main/resources/db/migration）
+- 各種サンプルコード（Adapter, Domain, Usecase, Integration, ログ出力例、テストコードの配置例）
+- 独立した E2E テストプロジェクト（e2e/）
+
+## 課題対応
+- 統合用ドメインサービス導入により、TweetPostedEvent の通知連携処理を統一し、各コンテキスト間の直接依存を低減
+- ログ出力において個人情報が適切にマスクされるよう実装し、生成AIエージェントによる監視体制を確立
+- 値オブジェクトのUTを追加し、各値オブジェクトのバリデーション、不変性、マスク処理を検証
+- Flyway によるDBマイグレーションの自動管理と、テストデータの投入手順を確立
+
+## 注意点・改善提案
+- 将来的な拡張時には、より高度な統合イベント処理（例：メッセージブローカーの導入）を検討する
+- ログ管理システムとの連携を強化し、運用時の自動異常検知をより精度高く行う仕組みを導入する
+
+```
+
+---
+
+## 12. 重要な注意事項
+
+- 不明点がある場合は、作業開始前に必ず確認してください。
+- 重要な判断が必要な場合は、その都度報告し、承認を得ること。
+- 予期せぬ問題が発生した場合は、即時報告し、対応策を提案してください。
+- **明示的に指示されていない変更は行わないこと。** 必要な変更があれば、まず提案して承認を得ること。
+- **UI/UX の変更（レイアウト、色、フォント、間隔など）は禁止です。** 変更が必要な場合は、事前に理由を示し、承認を得ること。
+- **技術スタックに記載されたバージョンは変更しないこと。**（今回の更新では、ネット上の最新安定版に基づいたバージョン情報を反映）
+
+---
+
+## 13. 補足: 技術スタック詳細（変更禁止の項目）
+
+- **コア技術（変更禁止）**:
+  - **TypeScript**: ^5.0.0  
+  - **Node.js**: ^20.0.0  
+  - **Java**: 21  
+  - **Kotlin**: 2.x  
+  - **AIモデル**: Claude-3-Sonnet-20241022 (Anthropic Messages API 2023-06-01)
+- **フロントエンド**:
+  - **Next.js**: ^15.1.3  
+  - **React**: ^19.0.0  
+  - **Tailwind CSS**: ^3.4.17  
+  - **shadcn/ui**: ^2.1.8
+- **バックエンド**:
+  - **MySQL**: 8.0.33  
+  - **jOOQ**: ^3.18.2  
+  - **Spring Boot**: ^3.1.3  
+  - **kotlin‑logging**: ^3.0.5  
+  - **Kotest**: ^5.6.2  
+  - **Mockk**: ^1.13.5
+- **開発ツール**:
+  - **npm**: ^10.0.0  
+  - **ESLint**: ^9.0.0  
+  - **TypeScript**: ^5.0.0
+- **API バージョン管理**:
+  - API クライアントは `app/lib/api/client.ts`、型定義は `types.ts`、環境設定は `config.ts` で一元管理。これらのファイルは変更禁止です。
+
+---
+
+以上が、更新済みの .cursorrules です。  
+このファイルをもとに、プロジェクト内の各ルールが正しく適用され、設計および実装タスクが遂行されるよう管理してください。
+```
