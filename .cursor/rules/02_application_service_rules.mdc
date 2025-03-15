@@ -1,0 +1,13 @@
+---
+description: アプリケーションサービスに関するルール
+globs: backend/src/main/kotlin/com/example/xclone/**/application/**/*.kt
+alwaysApply: false
+---
+# Application Service Rules
+
+- UseCaseインターフェースを実装する
+- 単一責務の原則を厳守する
+- 入力はXXXCommandクラスで受け取る
+- 出力はXXXResponseクラスで返す
+- トランザクション境界として機能する
+- ドメインモデルの生成・操作を行う 

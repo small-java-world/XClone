@@ -1,0 +1,12 @@
+---
+description: 
+globs: backend/src/main/kotlin/com/example/xclone/common/config/*.kt
+alwaysApply: false
+---
+
+# Configuration Rules
+
+- @Configurationアノテーションを使用する
+- 環境変数は@Valueアノテーションで注入する
+- Bean定義は@Beanアノテーションで行う
+- プロパティは型安全に定義する 

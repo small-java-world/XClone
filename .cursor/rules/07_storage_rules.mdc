@@ -1,0 +1,11 @@
+---
+description: ストレージに関するルール
+globs: backend/src/main/kotlin/com/example/xclone/storage/**/*.kt
+alwaysApply: false
+---
+# Storage Rules
+
+- S3StorageAdapterはStoragePortインターフェースを実装する
+- ファイルパスの生成はドメインモデルで行う
+- ストレージ操作の例外はStorageExceptionでラップする
+- ファイルメタデータはStorageFileドメインモデルで管理する 

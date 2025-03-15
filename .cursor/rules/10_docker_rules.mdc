@@ -1,0 +1,13 @@
+---
+description: Docker関連の設定に関するルール
+globs: docker-compose.yml,Dockerfile,**/Dockerfile
+alwaysApply: false
+---
+
+
+# Docker Rules
+
+- マルチステージビルドを使用する
+- 環境変数は.env.localで管理する
+- ボリュームはデータ永続化に使用する
+- ヘルスチェックを設定する 

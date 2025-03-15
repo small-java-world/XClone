@@ -1,0 +1,11 @@
+---
+description: 永続化アダプターに関するルール
+globs: backend/src/main/kotlin/com/example/xclone/**/adapter/out/persistence/**/*.kt
+alwaysApply: false
+---
+# Persistence Adapter Rules
+
+- @Repositoryアノテーションを使用する
+- jOOQのDSLContextを使用する
+- エンティティマッパーを使用してドメインモデルとの変換を行う
+- トランザクション制御はアプリケーションサービスに任せる 

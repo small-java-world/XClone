@@ -1,0 +1,11 @@
+---
+description: マイグレーションに関するルール
+globs: backend/src/main/resources/db/migration/*.sql
+alwaysApply: false
+---
+# Migration Rules
+
+- ファイル名はV{n}__{description}.sqlの形式とする
+- マイグレーションは累積的に適用可能とする
+- ロールバックを考慮した設計とする
+- インデックスは適切に設定する 
