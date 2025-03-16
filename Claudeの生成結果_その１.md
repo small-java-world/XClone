@@ -46,6 +46,59 @@
 
 ### 3.1 クリーンアーキテクチャとDDD
 
+## 3. アーキテクチャ設計
+
+### 3.1 クリーンアーキテクチャとDDD
+
+クリーンアーキテクチャの全体像を、層間で交換されるオブジェクトも含めて以下に示します。このアーキテクチャは依存関係の方向が内側に向かうことを特徴とし、アプリケーションの核心部分（ビジネスルール）を外部の技術的関心事から保護します。
+
+```
+      +----------------------------------------------------------+
+      |                      Entities                             |
+      |                (Enterprise Business Rules)                |
+      +----------------------------------------------------------+
+                                  ↑
+                                  |
+      +----------------------------------------------------------+
+      |                     Use Cases                             |
+      |               (Application Business Rules)                |
+      +----------------------------------------------------------+
+                                  ↑
+                                  |
+      +----------------------------------------------------------+
+      |                Interface Adapters                         |
+      |         (Controllers, Presenters, Gateways)               |
+      +----------------------------------------------------------+
+                                  ↑
+                                  |
+      +----------------------------------------------------------+
+      |                 Frameworks & Drivers                      |
+      |            (DB, UI, External Interfaces)                  |
+      +----------------------------------------------------------+
+```
+
+各層で交換されるオブジェクトは以下の通りです：
+
+1. **REST API / UI ↔ プレゼンテーション層**:
+   - **入力**: HTTP Request, Form Submission
+   - **出力**: HTTP Response, JSON/HTML Response
+
+2. **プレゼンテーション層 ↔ アプリケーション層**:
+   - **入力**: Commands (CreatePostCommand, GetUserCommand など)
+   - **出力**: Response Objects (PostResponse など)
+
+3. **アプリケーション層 ↔ ドメイン層**:
+   - **入力**: メソッド呼び出し（パラメータとして基本型や値オブジェクト）
+   - **出力**: エンティティ、集約、値オブジェクト
+
+4. **ドメイン層 ↔ インフラストラクチャ層**:
+   - **入力**: リポジトリインターフェースのメソッド呼び出し
+   - **出力**: エンティティのコレクションや個別エンティティ
+
+ドメイン駆動設計（DDD）の原則と組み合わせることで、ビジネスドメインをコードに直接反映し、ユビキタス言語を通じて開発チームとドメインエキスパートの間の共通理解を促進します。
+
+ドメイン駆動設計（DDD）の原則と組み合わせることで、ビジネスドメインをコードに直接反映し、ユビキタス言語を通じて開発チームとドメインエキスパートの間の共通理解を促進します。
+
 本アプリケーションは、クリーンアーキテクチャとドメイン駆動設計(DDD)の原則に従って設計されます。これにより、ビジネスロジックがインフラストラクチャやUIから独立し、保守性と拡張性が高まります。
 
 #### 3.1.1 ドメイン境界
@@ -58,7 +111,181 @@
 - **通知（Notification）**
 - **タイムライン（Timeline）**
 
-### 3.2 レイヤー構成
+### 3.2 レイヤー構成と依存関係
+
+クリーンアーキテクチャの基本原則に従い、依存性は常に外側から内側へ向かうように設計します。
+
+```
+      外側                            内側
+      ┌───────────────────┐        ┌───────────────────┐
+      │                   │        │                   │
+      │ プレゼンテーション層   │───────→│ アプリケーション層   │
+      │ (Controllers)      │        │ (UseCases)       │
+      │                   │        │                   │
+      └───────────────────┘        └─────────┬─────────┘
+             ↑                               │
+             │                               │
+             │                               ↓
+      ┌───────────────────┐        ┌───────────────────┐
+      │                   │        │                   │
+      │ インフラストラクチャ層 │◄───────│ ドメイン層       │
+      │ (Repositories)     │        │ (Entities)       │
+      │                   │        │                   │
+      └───────────────────┘        └───────────────────┘
+```
+
+各レイヤーの責務と依存関係は以下の通りです：
+
+1. **ドメイン層（最内層）**：ビジネスエンティティと基本ルールを含み、他のレイヤーに依存しない
+2. **アプリケーション層**：ユースケースを実装し、ドメイン層にのみ依存
+3. **インフラストラクチャ層（外層）**：技術的実装を提供し、内側のレイヤーに依存
+4. **プレゼンテーション層（最外層）**：UIとAPI定義を実装し、アプリケーション層に依存
+
+この依存関係の方向性を維持することで、内側のコアビジネスロジックは外側の実装詳細から分離され、テスト容易性と保守性が向上します。
+
+#### 3.2.1 層間オブジェクト変換
+
+各層の間では以下のようなオブジェクトの変換が行われます：
+
+**プレゼンテーション層 → アプリケーション層**:
+```kotlin
+// コントローラーでのリクエスト → コマンド変換例
+@PostMapping
+suspend fun createPost(@RequestBody request: CreatePostRequest): ResponseEntity<PostResponse> {
+    // リクエストをコマンドに変換
+    val command = CreatePostCommand(
+        userId = UserId(UUID.fromString(request.userId)),
+        content = request.content,
+        mediaUrls = request.mediaUrls
+    )
+    
+    // ユースケースにコマンドを渡して実行
+    val response = createPostUseCase.execute(command)
+    return ResponseEntity.status(HttpStatus.CREATED).body(response)
+}
+```
+
+**アプリケーション層 → ドメイン層**:
+```kotlin
+// ユースケースでのコマンド → ドメインモデル変換例
+class CreatePostUseCase(
+    private val postRepository: PostRepository,
+    private val userRepository: UserRepository
+) {
+    suspend fun execute(command: CreatePostCommand): PostResponse {
+        // ユーザーの存在確認
+        val user = userRepository.findById(command.userId)
+            ?: throw UserNotFoundException(command.userId.value)
+        
+        // コマンドからドメインモデル（エンティティ）を生成
+        val post = Post(
+            id = PostId.generate(),
+            userId = command.userId,
+            content = PostContent(command.content),
+            mediaUrls = command.mediaUrls?.map { MediaUrl(it) },
+            replyToId = command.replyToId,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+        
+        // リポジトリにドメインモデルを保存
+        val savedPost = postRepository.save(post)
+        
+        // ドメインモデルからレスポンスオブジェクトに変換
+        return PostResponse.fromPost(savedPost)
+    }
+}
+```
+
+**ドメイン層 → インフラストラクチャ層**:
+```kotlin
+// リポジトリインターフェース定義（ドメイン層）
+interface PostRepository {
+    suspend fun save(post: Post): Post
+    suspend fun findById(id: PostId): Post?
+    suspend fun findByUserId(userId: UserId, page: Int, size: Int): List<Post>
+    suspend fun delete(id: PostId)
+}
+
+// リポジトリ実装（インフラストラクチャ層）での変換例
+@Repository
+class MySQLPostRepository(private val dsl: DSLContext) : PostRepository {
+    override suspend fun save(post: Post): Post = withContext(Dispatchers.IO) {
+        // ドメインモデルをデータベースレコードに変換
+        val binaryId = uuidToMySqlBin(post.id.value, true)
+        val binaryUserId = uuidToMySqlBin(post.userId.value, true)
+        
+        val record = dsl.newRecord(POSTS).apply {
+            id = binaryId
+            userId = binaryUserId
+            content = post.content.value
+            mediaUrls = post.mediaUrls?.map { it.value }?.let { JSON.valueOf(it.toString()) }
+            replyToId = post.replyToId?.let { uuidToMySqlBin(it.value, true) }
+            createdAt = post.createdAt
+            updatedAt = post.updatedAt
+        }
+        
+        record.store()
+        post
+    }
+    
+    // 他のメソッド実装...
+}
+```
+
+**インフラストラクチャ層 → ドメイン層**:
+```kotlin
+// データベースレコードからドメインモデルへの変換例
+private fun PostRecord.toDomain(): Post {
+    // バイナリIDをUUIDに変換
+    val postUuid = (id as ByteArray).toUuid(true)
+    val userUuid = (userId as ByteArray).toUuid(true)
+    
+    return Post(
+        id = PostId(postUuid),
+        userId = UserId(userUuid),
+        content = PostContent(content),
+        mediaUrls = mediaUrls?.let { 
+            try {
+                val jsonArray = JSON.parse(it.toString()) as JSONArray
+                jsonArray.map { MediaUrl(it.toString()) }
+            } catch (e: Exception) {
+                null
+            }
+        },
+        replyToId = replyToId?.let { PostId((it as ByteArray).toUuid(true)) },
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+}
+```
+
+**アプリケーション層 → プレゼンテーション層**:
+```kotlin
+// ドメインモデルからレスポンスへの変換例
+data class PostResponse(
+    val id: String,
+    val userId: String,
+    val content: String,
+    val mediaUrls: List<String>?,
+    val replyToId: String?,
+    val createdAt: String,
+    val updatedAt: String
+) {
+    companion object {
+        fun fromPost(post: Post): PostResponse {
+            return PostResponse(
+                id = post.id.value.toString(),
+                userId = post.userId.value.toString(),
+                content = post.content.value,
+                mediaUrls = post.mediaUrls?.map { it.value },
+                replyToId = post.replyToId?.value?.toString(),
+                createdAt = post.createdAt.toString(),
+                updatedAt = post.updatedAt.toString()
+            )
+        }
+    }
+}
 
 #### 3.2.1 ドメイン層
 
@@ -722,7 +949,81 @@ volumes:
   redis-data:
 ```
 
-## 8. UUID最適化ユーティリティ
+## 8. プロジェクト構造
+
+### 8.1 パッケージ構成
+
+クリーンアーキテクチャと各ドメイン境界に基づいたパッケージ構造を採用します：
+
+```
+com.example.xclone/
+├── application/           # アプリケーション層
+│   ├── config/            # アプリケーション設定
+│   ├── user/              # ユーザードメインのユースケース
+│   │   ├── command/       # コマンドオブジェクト
+│   │   ├── dto/           # レスポンスDTO
+│   │   └── usecase/       # ユースケースクラス
+│   ├── post/              # 投稿ドメインのユースケース
+│   ├── follow/            # フォロードメインのユースケース
+│   ├── notification/      # 通知ドメインのユースケース
+│   └── timeline/          # タイムラインドメインのユースケース
+│
+├── domain/                # ドメイン層
+│   ├── common/            # 共通のドメインコンポーネント
+│   │   ├── exception/     # ドメイン例外
+│   │   └── valueobject/   # 共通の値オブジェクト
+│   ├── user/              # ユーザードメイン
+│   │   ├── entity/        # エンティティ
+│   │   ├── repository/    # リポジトリインターフェース
+│   │   ├── service/       # ドメインサービス
+│   │   └── valueobject/   # 値オブジェクト
+│   ├── post/              # 投稿ドメイン
+│   ├── follow/            # フォロードメイン
+│   ├── notification/      # 通知ドメイン
+│   └── timeline/          # タイムラインドメイン
+│
+├── infrastructure/        # インフラストラクチャ層
+│   ├── config/            # 技術的な設定
+│   ├── persistence/       # 永続化の実装
+│   │   ├── jooq/          # jOOQ関連の設定
+│   │   ├── repository/    # リポジトリ実装
+│   │   │   ├── user/      # ユーザーリポジトリ実装
+│   │   │   ├── post/      # 投稿リポジトリ実装
+│   │   │   └── ...        # その他のリポジトリ実装
+│   │   └── mapper/        # エンティティとデータベースレコードのマッパー
+│   ├── security/          # セキュリティ関連
+│   ├── cache/             # Redisキャッシュ実装
+│   └── util/              # インフラストラクチャユーティリティ
+│       └── UuidUtil.kt    # UUID変換ユーティリティ
+│
+└── presentation/          # プレゼンテーション層
+    ├── config/            # プレゼンテーション設定
+    ├── controller/        # APIコントローラー
+    │   ├── user/          # ユーザーコントローラー
+    │   ├── post/          # 投稿コントローラー
+    │   └── ...            # その他のコントローラー
+    ├── request/           # リクエストモデル
+    ├── response/          # レスポンスモデル
+    ├── advice/            # グローバル例外ハンドラー
+    └── filter/            # リクエストフィルター
+```
+
+### 8.2 モジュール構成
+
+大規模なプロジェクトへの拡張性を考慮し、マルチモジュール構成も検討します：
+
+```
+xclone/
+├── xclone-domain/                # ドメインモジュール
+├── xclone-application/           # アプリケーションモジュール
+├── xclone-infrastructure/        # インフラストラクチャモジュール
+├── xclone-presentation/          # プレゼンテーションモジュール
+└── xclone-boot/                  # アプリケーション起動モジュール
+```
+
+各モジュールは独自のビルドファイル（build.gradle.kts）を持ち、依存関係が明確に定義されます。この構成により、関心事の分離が強化され、大規模チームでの開発効率が向上します。
+
+## 9. UUID最適化ユーティリティ
 
 効率的なUUID操作を行うためのユーティリティクラスを実装します。
 
@@ -769,5 +1070,3 @@ object UuidUtil {
         for (i in 8..15) {
             bytes[i] = ((lsb shr ((15 - i) * 8)) and 0xFF).toByte()
         }
-        
-        
