@@ -1,0 +1,129 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: テーブルとエンティティの対応関係に関するルール
+globs: backend/src/main/kotlin/com/example/xclone/domain/**/entity/*.kt,backend/src/main/kotlin/com/example/xclone/infrastructure/persistence/**/*.kt,backend/src/main/resources/db/migration/*.sql
+alwaysApply: false
+---
+# Entity-Table Mapping Rules
+
+## 命名規則
+- **エンティティ名**: PascalCase、単数形（例: `User`, `Post`）
+- **テーブル名**: snake_case、複数形（例: `users`, `posts`）
+- **ID属性**: エンティティでは `id: UserId` のような型付きID、テーブルでは `id BINARY(16)`
+- **外部キー**: エンティティでは `userId: UserId` のような型付きID、テーブルでは `user_id BINARY(16)`
+
+## マッピング原則
+- 各ドメインエンティティは1つのテーブルに対応する（1対1マッピング）
+- 値オブジェクトは適切なデータ型にマッピングする（例: `Email` → `VARCHAR(255)`）
+- 集約ルートのIDは外部キーとして参照する
+- 列挙型（Enum）はテーブルでは文字列として保存する
+
+## UUID処理
+- エンティティではUUIDを型安全な値オブジェクト（例: `UserId(UUID)`, `PostId(UUID)`）として扱う
+- テーブルではUUIDをBINARY(16)型で保存し、インデックス効率を向上させる
+- UUIDのバイナリ変換はインフラストラクチャ層で処理する
+
+## リレーションシップ
+- **1対1関係**: 外部キー + 一意制約を使用
+- **1対多関係**: 「多」側のテーブルに外部キーを配置
+- **多対多関係**: 中間テーブルを使用（例: `user_roles`）
+
+## 具体的なマッピング例
+
+### ユーザーエンティティとテーブル
+```kotlin
+// ドメインエンティティ
+data class User(
+    val id: UserId,
+    val username: Username,
+    val displayName: DisplayName,
+    val email: Email,
+    val passwordHash: PasswordHash,
+    val bio: UserBio?,
+    val profileImageUrl: ProfileImageUrl?,
+    val createdAt: Instant,
+    val updatedAt: Instant
+)
+
+// テーブル定義（SQL）
+CREATE TABLE users (
+    id BINARY(16) PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    display_name VARCHAR(50) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    bio TEXT,
+    profile_image_url VARCHAR(255),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+```
+
+### 投稿エンティティとテーブル
+```kotlin
+// ドメインエンティティ
+data class Post(
+    val id: PostId,
+    val userId: UserId,
+    val content: PostContent,
+    val mediaUrls: List<MediaUrl>?,
+    val replyToId: PostId?,
+    val createdAt: Instant,
+    val updatedAt: Instant
+)
+
+// テーブル定義（SQL）
+CREATE TABLE posts (
+    id BINARY(16) PRIMARY KEY,
+    user_id BINARY(16) NOT NULL,
+    content TEXT NOT NULL,
+    media_urls JSON,
+    reply_to_id BINARY(16),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (reply_to_id) REFERENCES posts(id)
+);
+```
+
+## マッピング実装
+- リポジトリ実装でエンティティとテーブルレコードの変換を行う
+- 変換ロジックは一貫性を保つためにマッパークラスに集約する
+- jOOQの生成コードを使用してタイプセーフなクエリを実行する
+
+```kotlin
+// マッパー例
+object UserMapper {
+    fun toDomain(record: UserRecord): User {
+        return User(
+            id = UserId.fromBytes(record.id as ByteArray),
+            username = Username(record.username),
+            displayName = DisplayName(record.displayName),
+            email = Email(record.email),
+            passwordHash = PasswordHash(record.passwordHash),
+            bio = record.bio?.let { UserBio(it) },
+            profileImageUrl = record.profileImageUrl?.let { ProfileImageUrl(it) },
+            createdAt = record.createdAt,
+            updatedAt = record.updatedAt
+        )
+    }
+    
+    fun toRecord(dsl: DSLContext, entity: User): UserRecord {
+        return dsl.newRecord(USERS).apply {
+            id = entity.id.toBytes()
+            username = entity.username.value
+            displayName = entity.displayName.value
+            email = entity.email.value
+            passwordHash = entity.passwordHash.value
+            bio = entity.bio?.value
+            profileImageUrl = entity.profileImageUrl?.value
+            createdAt = entity.createdAt
+            updatedAt = entity.updatedAt
+        }
+    }
+}
+``` 

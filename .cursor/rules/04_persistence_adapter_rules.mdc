@@ -5,10 +5,102 @@ alwaysApply: false
 ---
 # Persistence Adapter Rules
 
+## 基本原則
 - @Repositoryアノテーションを使用する
-- jOOQのDSLContextを使用する
+- jOOQのDSLContextを使用してタイプセーフなクエリを実行する
 - エンティティマッパーを使用してドメインモデルとの変換を行う
 - トランザクション制御はアプリケーションサービスに任せる
 - UUIDはBINARY(16)型で保存し、効率的なインデックスのためにビットスワップを適用する
 - コルーチンを使用し、withContext(Dispatchers.IO)でIO処理を行う
-- 複合インデックスを適切に活用する 
+- 複合インデックスを適切に活用する
+
+## パッケージ構造
+```
+infrastructure/persistence/
+├── jooq/                  # jOOQ関連の設定
+│   ├── config/            # jOOQ設定クラス
+│   └── generated/         # 生成されたjOOQコード
+├── repository/            # リポジトリ実装
+│   ├── user/              # ユーザーリポジトリ実装
+│   ├── post/              # 投稿リポジトリ実装
+│   └── ...                # その他のリポジトリ実装
+└── mapper/                # エンティティマッパー
+    ├── UserMapper.kt      # ユーザーエンティティマッパー
+    ├── PostMapper.kt      # 投稿エンティティマッパー
+    └── ...                # その他のエンティティマッパー
+```
+
+## リポジトリ実装
+- ドメイン層で定義されたリポジトリインターフェースを実装する
+- クラス名は「MySQL」などのデータベース名をプレフィックスとする（例: `MySQLUserRepository`）
+- 各メソッドはコルーチンとして実装し、IO処理を適切に処理する
+- 例外はドメイン例外に変換してスローする
+
+```kotlin
+@Repository
+class MySQLUserRepository(private val dsl: DSLContext) : UserRepository {
+    
+    override suspend fun findById(id: UserId): User? = withContext(Dispatchers.IO) {
+        try {
+            dsl.select()
+                .from(USERS)
+                .where(USERS.ID.eq(id.toBytes()))
+                .fetchOneInto(UserRecord::class.java)
+                ?.let { UserMapper.toDomain(it) }
+        } catch (e: Exception) {
+            throw RepositoryException("Failed to find user by id: ${id.value}", e)
+        }
+    }
+    
+    // 他のメソッド実装...
+}
+```
+
+## マッパー実装
+- エンティティとデータベースレコードの変換を担当する
+- 変換ロジックは一貫性を保つためにマッパークラスに集約する
+- 値オブジェクトの変換も適切に処理する
+- UUIDのバイナリ変換ロジックを含める
+
+```kotlin
+object UserMapper {
+    fun toDomain(record: UserRecord): User {
+        return User(
+            id = UserId.fromBytes(record.id as ByteArray),
+            username = Username(record.username),
+            displayName = DisplayName(record.displayName),
+            email = Email(record.email),
+            passwordHash = PasswordHash(record.passwordHash),
+            bio = record.bio?.let { UserBio(it) },
+            profileImageUrl = record.profileImageUrl?.let { ProfileImageUrl(it) },
+            createdAt = record.createdAt,
+            updatedAt = record.updatedAt
+        )
+    }
+    
+    fun toRecord(dsl: DSLContext, entity: User): UserRecord {
+        return dsl.newRecord(USERS).apply {
+            id = entity.id.toBytes()
+            username = entity.username.value
+            displayName = entity.displayName.value
+            email = entity.email.value
+            passwordHash = entity.passwordHash.value
+            bio = entity.bio?.value
+            profileImageUrl = entity.profileImageUrl?.value
+            createdAt = entity.createdAt
+            updatedAt = entity.updatedAt
+        }
+    }
+}
+```
+
+## クエリ最適化
+- N+1問題を回避するためにバッチ取得を活用する
+- 必要なカラムのみを選択してパフォーマンスを向上させる
+- 適切なインデックスを活用したクエリを設計する
+- 大量データの取得にはページネーションを適用する
+
+## キャッシュ戦略
+- 頻繁にアクセスされるデータはRedisでキャッシュする
+- キャッシュの有効期限を適切に設定する
+- キャッシュの整合性を保つための更新戦略を実装する 
