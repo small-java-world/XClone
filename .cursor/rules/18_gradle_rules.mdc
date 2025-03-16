@@ -1,6 +1,6 @@
 ---
 description: 
-globs: 
+globs: backend/build.gradle.kts,backend/settings.gradle.kts,backend/gradle/**/*.{kt,kts,gradle}
 alwaysApply: false
 ---
 ---

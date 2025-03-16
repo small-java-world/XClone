@@ -1,6 +1,6 @@
 ---
 description: 
-globs: 
+globs: backend/src/main/kotlin/com/example/xclone/domain/notification/**/*.kt,backend/src/main/kotlin/com/example/xclone/application/notification/**/*.kt
 alwaysApply: false
 ---
 ---

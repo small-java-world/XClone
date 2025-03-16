@@ -1,4 +1,9 @@
 ---
+description: 
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+---
 description: フロントエンドに関するルール
 globs: frontend/**/*.{ts,tsx}
 alwaysApply: false

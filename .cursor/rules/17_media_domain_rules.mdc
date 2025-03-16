@@ -1,6 +1,6 @@
 ---
 description: 
-globs: 
+globs: backend/src/main/kotlin/com/example/xclone/domain/media/**/*.kt,backend/src/main/kotlin/com/example/xclone/application/media/**/*.kt
 alwaysApply: false
 ---
 ---
