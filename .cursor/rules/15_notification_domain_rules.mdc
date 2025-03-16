@@ -1,0 +1,49 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: 通知ドメインに関するルール
+globs: backend/src/main/kotlin/com/example/xclone/domain/notification/**/*.kt,backend/src/main/kotlin/com/example/xclone/application/notification/**/*.kt
+alwaysApply: false
+---
+# Notification Domain Rules
+
+## エンティティと値オブジェクト
+- **Notification**: 通知を表すエンティティ
+  - **NotificationId**: 通知の一意識別子
+  - **UserId**: 通知の受信者ID
+  - **Type**: 通知タイプ（いいね、フォロー、返信、メンション等）
+  - **ActorId**: アクションを起こしたユーザーID
+  - **TargetId**: 通知対象（投稿IDなど）
+  - **IsRead**: 既読状態
+  - **CreatedAt**: 作成日時
+
+## ビジネスルール
+- 通知タイプは以下を含む：
+  - LIKE: 投稿へのいいね
+  - FOLLOW: フォロー
+  - REPLY: 投稿への返信
+  - MENTION: 投稿でのメンション
+  - RETWEET: リツイート
+- 自分自身のアクションは通知されない
+- 通知は既読/未読状態を持つ
+- 通知は時系列順（新しい順）に表示
+- 通知はページネーション対応
+- ブロックしたユーザーからの通知は表示されない
+
+## ユースケース
+- **CreateNotificationUseCase**: 通知作成
+- **GetUserNotificationsUseCase**: ユーザーの通知一覧取得
+- **MarkNotificationAsReadUseCase**: 通知を既読にする
+- **MarkAllNotificationsAsReadUseCase**: 全通知を既読にする
+- **GetUnreadNotificationCountUseCase**: 未読通知数取得
+- **DeleteNotificationUseCase**: 通知削除
+
+## API エンドポイント
+- **GET /api/notifications**: 通知一覧取得
+- **PUT /api/notifications/{id}/read**: 通知を既読にする
+- **PUT /api/notifications/read-all**: 全通知を既読にする
+- **GET /api/notifications/unread-count**: 未読通知数取得
+- **DELETE /api/notifications/{id}**: 通知削除 

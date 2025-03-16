@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: ユーザードメインに関するルール
+globs: backend/src/main/kotlin/com/example/xclone/domain/user/**/*.kt,backend/src/main/kotlin/com/example/xclone/application/user/**/*.kt
+alwaysApply: false
+---
+# User Domain Rules
+
+## エンティティと値オブジェクト
+- **User**: ユーザーを表すエンティティ
+  - **UserId**: UUID形式の識別子（BINARY(16)で保存）
+  - **Username**: 一意のユーザー名（@から始まる）
+  - **DisplayName**: 表示名
+  - **Email**: メールアドレス
+  - **Bio**: 自己紹介文（オプショナル）
+  - **ProfileImageUrl**: プロフィール画像URL（オプショナル）
+  - **PasswordHash**: パスワードハッシュ（BCryptで暗号化）
+  - **CreatedAt**: 作成日時
+  - **UpdatedAt**: 更新日時
+
+## ビジネスルール
+- ユーザー名は3〜15文字で、英数字とアンダースコアのみ許可
+- ユーザー名は一意であること
+- メールアドレスは一意であること
+- 表示名は1〜50文字であること
+- 自己紹介文は最大160文字
+- パスワードは8文字以上で、英大文字、英小文字、数字、特殊文字を含むこと
+
+## ユースケース
+- **RegisterUserUseCase**: 新規ユーザー登録
+- **AuthenticateUserUseCase**: ユーザー認証
+- **UpdateUserProfileUseCase**: プロフィール更新
+- **ChangePasswordUseCase**: パスワード変更
+- **DeleteUserUseCase**: ユーザー削除
+- **GetUserProfileUseCase**: プロフィール取得
+
+## API エンドポイント
+- **POST /api/auth/register**: ユーザー登録
+- **POST /api/auth/login**: ログイン
+- **GET /api/users/{id}**: ユーザー情報取得
+- **GET /api/users/me**: 自分の情報取得
+- **PUT /api/users/me**: ユーザー情報更新
+- **DELETE /api/users/me**: ユーザー削除 

@@ -1,0 +1,40 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: フォロー関係のドメインルール
+globs: backend/src/main/kotlin/com/example/xclone/domain/follow/**/*.kt,backend/src/main/kotlin/com/example/xclone/application/follow/**/*.kt
+alwaysApply: false
+---
+# Follow Domain Rules
+
+## エンティティと値オブジェクト
+- **Follow**: フォロー関係を表すエンティティ
+  - **FollowerId**: フォローするユーザーのID
+  - **FolloweeId**: フォローされるユーザーのID
+  - **CreatedAt**: フォロー開始日時
+
+## ビジネスルール
+- 自分自身をフォローすることはできない
+- 同じユーザーを重複してフォローすることはできない
+- フォロー関係は解除（アンフォロー）可能
+- フォロー/フォロワー数に上限なし
+- フォロー関係はユーザーが削除されると自動的に削除される
+
+## ユースケース
+- **FollowUserUseCase**: ユーザーをフォロー
+- **UnfollowUserUseCase**: ユーザーのフォローを解除
+- **GetFollowersUseCase**: フォロワー一覧取得
+- **GetFolloweesUseCase**: フォロー中ユーザー一覧取得
+- **CheckFollowStatusUseCase**: フォロー状態確認
+- **GetFollowCountUseCase**: フォロー/フォロワー数取得
+
+## API エンドポイント
+- **POST /api/users/{userId}/follow**: ユーザーをフォロー
+- **DELETE /api/users/{userId}/follow**: フォロー解除
+- **GET /api/users/{userId}/followers**: フォロワー一覧取得
+- **GET /api/users/{userId}/following**: フォロー中ユーザー一覧取得
+- **GET /api/users/{userId}/follow/status**: フォロー状態確認
+- **GET /api/users/{userId}/follow/count**: フォロー/フォロワー数取得 
