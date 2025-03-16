@@ -1,4 +1,9 @@
 ---
+description: 
+globs: 
+alwaysApply: false
+---
+---
 description: Docker関連の設定に関するルール
 globs: docker-compose.yml,Dockerfile,**/Dockerfile
 alwaysApply: false

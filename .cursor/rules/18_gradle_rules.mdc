@@ -1,0 +1,70 @@
+---
+description: Gradleの設定や処理に関するルール
+globs: backend/build.gradle.kts,backend/settings.gradle.kts,backend/gradle/**/*.{kt,kts,gradle}
+alwaysApply: false
+---
+# Gradle Rules
+
+## ビルド設定
+- **Kotlin DSL**: Gradleの設定はKotlin DSLを使用
+- **バージョンカタログ**: 依存関係はバージョンカタログ（libs.versions.toml）で一元管理
+- **Java 21**: Java 21をターゲットとして設定
+- **Kotlin 1.9+**: Kotlin 1.9以上を使用
+
+## プラグイン
+- **Spring Boot**: org.springframework.boot プラグイン
+- **Kotlin**: org.jetbrains.kotlin.jvm, org.jetbrains.kotlin.plugin.spring プラグイン
+- **jOOQ**: nu.studer.jooq プラグイン
+- **Flyway**: org.flywaydb.flyway プラグイン
+- **Docker**: com.bmuschko.docker-spring-boot-application プラグイン（オプション）
+
+## タスク
+- **flywayMigrate**: データベースマイグレーションを実行
+- **generateJooq**: jOOQコード生成
+- **test**: Kotestを使用したテスト実行
+- **bootRun**: Spring Bootアプリケーションの実行
+- **bootJar**: 実行可能JARの作成
+
+## 依存関係管理
+- **Spring Boot**: Spring Boot Starter依存関係
+- **Kotlin Coroutines**: kotlinx-coroutines-core, kotlinx-coroutines-reactor
+- **jOOQ**: jOOQ依存関係
+- **MySQL**: MySQL Connector
+- **Flyway**: Flyway Core
+- **Redis**: Spring Data Redis
+- **Kotest**: Kotestテストフレームワーク
+- **MockK**: Mockingライブラリ
+
+## マイグレーション
+- **Flyway**: データベースマイグレーションにFlywayを使用
+- **マイグレーションファイル**: backend/src/main/resources/db/migration/ に配置
+- **命名規則**: V{バージョン}__{説明}.sql（例：V1__create_users_table.sql）
+- **バージョン管理**: マイグレーションファイルはバージョン管理システムに含める
+- **冪等性**: マイグレーションスクリプトは冪等性を持たせる必要はない（Flywayが管理）
+
+## jOOQ設定
+- **コード生成**: Flywayマイグレーション後にjOOQコードを生成
+- **生成先**: backend/src/main/kotlin/com/example/xclone/infrastructure/persistence/jooq/generated/
+- **ネーミング戦略**: PascalCaseのクラス名、camelCaseのフィールド名
+
+## 環境変数
+- **開発環境**: .env.local ファイルから環境変数を読み込む
+- **本番環境**: 環境変数を直接設定
+
+## Gradleタスク実行例
+```bash
+# データベースマイグレーション
+./gradlew flywayMigrate
+
+# jOOQコード生成
+./gradlew generateJooq
+
+# テスト実行
+./gradlew test
+
+# アプリケーション実行
+./gradlew bootRun
+
+# ビルド
+./gradlew bootJar
+``` 

@@ -5,10 +5,58 @@ alwaysApply: false
 ---
 # Migration Rules
 
-- ファイル名はV{n}__{description}.sqlの形式とする
+## 命名規則
+- ファイル名は `V{バージョン}__{説明}.sql` の形式とする
+  - 例: `V1__create_users_table.sql`, `V2__add_profile_image_column.sql`
+- バージョンは連番で、必要に応じて小数点を使用可能（例: V1.1, V1.2）
+- 説明はスネークケースで、内容を簡潔に表現する
+
+## 設計原則
 - マイグレーションは累積的に適用可能とする
-- ロールバックを考慮した設計とする
-- インデックスは適切に設定する
+- 一度適用したマイグレーションファイルは変更しない
+- 変更が必要な場合は新しいマイグレーションファイルを作成する
+- 各マイグレーションは独立して実行可能であること
+- トランザクション内で実行されるようにする
+
+## データベース設計
+- テーブル名は複数形の英小文字とする（例: users, posts）
+- カラム名はスネークケースとする（例: user_id, created_at）
+- 主キーには `id` を使用し、BINARY(16)型のUUIDを格納
+- 外部キーには `{テーブル名の単数形}_id` の命名規則を使用（例: user_id, post_id）
+- 全てのテーブルに `created_at` と `updated_at` カラムを含める
+- 論理削除を使用する場合は `deleted_at` カラムを追加
+
+## インデックス
+- 主キーには自動的にインデックスが作成される
+- 外部キーには明示的にインデックスを作成する
+- 頻繁に検索されるカラムにはインデックスを追加する
+- 複合検索条件には複合インデックスを適用する
+- インデックス名は `idx_{テーブル名}_{カラム名}` の形式とする
+
+## UUID最適化
 - UUIDはBINARY(16)型で保存する
-- 時系列アクセスが多いカラムにはcreated_atインデックスを追加する
-- 頻繁に使用される検索パターンには複合インデックスを適用する 
+- タイムスタンプビットのスワップを適用し、時系列でのインデックス効率を向上させる
+- アプリケーション層でUUID⇔バイナリ変換を処理する
+
+## マイグレーション実行
+- 開発環境では `./gradlew flywayMigrate` コマンドでマイグレーションを実行
+- CI/CDパイプラインでは自動的にマイグレーションを適用
+- 本番環境へのデプロイ前にマイグレーションをテスト環境で検証
+
+## マイグレーション例
+```sql
+-- V1__create_users_table.sql
+CREATE TABLE users (
+    id BINARY(16) PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    display_name VARCHAR(50) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    bio TEXT,
+    profile_image_url VARCHAR(255),
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    INDEX idx_users_username (username),
+    INDEX idx_users_email (email),
+    INDEX idx_users_created_at (created_at)
+); 
