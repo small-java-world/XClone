@@ -154,7 +154,7 @@
 suspend fun createPost(@RequestBody request: CreatePostRequest): ResponseEntity<PostResponse> {
     // リクエストをコマンドに変換
     val command = CreatePostCommand(
-        userId = UserId(UUID.fromString(request.userId)),
+        userId = UserId.fromString(request.userId),
         content = request.content,
         mediaUrls = request.mediaUrls
     )
@@ -175,7 +175,7 @@ class CreatePostUseCase(
     suspend fun execute(command: CreatePostCommand): PostResponse {
         // ユーザーの存在確認
         val user = userRepository.findById(command.userId)
-            ?: throw UserNotFoundException(command.userId.value)
+            ?: throw UserNotFoundException(command.userId)
         
         // コマンドからドメインモデル（エンティティ）を生成
         val post = Post(
@@ -212,15 +212,15 @@ interface PostRepository {
 class MySQLPostRepository(private val dsl: DSLContext) : PostRepository {
     override suspend fun save(post: Post): Post = withContext(Dispatchers.IO) {
         // ドメインモデルをデータベースレコードに変換
-        val binaryId = uuidToMySqlBin(post.id.value, true)
-        val binaryUserId = uuidToMySqlBin(post.userId.value, true)
+        val binaryId = post.id.toBytes()
+        val binaryUserId = post.userId.toBytes()
         
         val record = dsl.newRecord(POSTS).apply {
             id = binaryId
             userId = binaryUserId
             content = post.content.value
             mediaUrls = post.mediaUrls?.map { it.value }?.let { JSON.valueOf(it.toString()) }
-            replyToId = post.replyToId?.let { uuidToMySqlBin(it.value, true) }
+            replyToId = post.replyToId?.toBytes()
             createdAt = post.createdAt
             updatedAt = post.updatedAt
         }
@@ -238,12 +238,12 @@ class MySQLPostRepository(private val dsl: DSLContext) : PostRepository {
 // データベースレコードからドメインモデルへの変換例
 private fun PostRecord.toDomain(): Post {
     // バイナリIDをUUIDに変換
-    val postUuid = (id as ByteArray).toUuid(true)
-    val userUuid = (userId as ByteArray).toUuid(true)
+    val postId = PostId.fromBytes(id as ByteArray)
+    val userId = UserId.fromBytes(userId as ByteArray)
     
     return Post(
-        id = PostId(postUuid),
-        userId = UserId(userUuid),
+        id = postId,
+        userId = userId,
         content = PostContent(content),
         mediaUrls = mediaUrls?.let { 
             try {
@@ -253,7 +253,7 @@ private fun PostRecord.toDomain(): Post {
                 null
             }
         },
-        replyToId = replyToId?.let { PostId((it as ByteArray).toUuid(true)) },
+        replyToId = replyToId?.let { PostId.fromBytes(it as ByteArray) },
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -275,11 +275,11 @@ data class PostResponse(
     companion object {
         fun fromPost(post: Post): PostResponse {
             return PostResponse(
-                id = post.id.value.toString(),
-                userId = post.userId.value.toString(),
+                id = post.id.toString(),
+                userId = post.userId.toString(),
                 content = post.content.value,
                 mediaUrls = post.mediaUrls?.map { it.value },
-                replyToId = post.replyToId?.value?.toString(),
+                replyToId = post.replyToId?.toString(),
                 createdAt = post.createdAt.toString(),
                 updatedAt = post.updatedAt.toString()
             )
@@ -1008,20 +1008,64 @@ com.example.xclone/
     └── filter/            # リクエストフィルター
 ```
 
-### 8.2 モジュール構成
+### 8.2 プロジェクト構造
 
-大規模なプロジェクトへの拡張性を考慮し、マルチモジュール構成も検討します：
+クリーンアーキテクチャと各ドメイン境界に基づいたパッケージ構造を採用します：
 
 ```
-xclone/
-├── xclone-domain/                # ドメインモジュール
-├── xclone-application/           # アプリケーションモジュール
-├── xclone-infrastructure/        # インフラストラクチャモジュール
-├── xclone-presentation/          # プレゼンテーションモジュール
-└── xclone-boot/                  # アプリケーション起動モジュール
+com.example.xclone/
+├── application/           # アプリケーション層
+│   ├── config/            # アプリケーション設定
+│   ├── user/              # ユーザードメインのユースケース
+│   │   ├── command/       # コマンドオブジェクト
+│   │   ├── dto/           # レスポンスDTO
+│   │   └── usecase/       # ユースケースクラス
+│   ├── post/              # 投稿ドメインのユースケース
+│   ├── follow/            # フォロードメインのユースケース
+│   ├── notification/      # 通知ドメインのユースケース
+│   └── timeline/          # タイムラインドメインのユースケース
+│
+├── domain/                # ドメイン層
+│   ├── common/            # 共通のドメインコンポーネント
+│   │   ├── exception/     # ドメイン例外
+│   │   └── valueobject/   # 共通の値オブジェクト
+│   ├── user/              # ユーザードメイン
+│   │   ├── entity/        # エンティティ
+│   │   ├── repository/    # リポジトリインターフェース
+│   │   ├── service/       # ドメインサービス
+│   │   └── valueobject/   # 値オブジェクト
+│   ├── post/              # 投稿ドメイン
+│   ├── follow/            # フォロードメイン
+│   ├── notification/      # 通知ドメイン
+│   └── timeline/          # タイムラインドメイン
+│
+├── infrastructure/        # インフラストラクチャ層
+│   ├── config/            # 技術的な設定
+│   ├── persistence/       # 永続化の実装
+│   │   ├── jooq/          # jOOQ関連の設定
+│   │   ├── repository/    # リポジトリ実装
+│   │   │   ├── user/      # ユーザーリポジトリ実装
+│   │   │   ├── post/      # 投稿リポジトリ実装
+│   │   │   └── ...        # その他のリポジトリ実装
+│   │   └── mapper/        # エンティティとデータベースレコードのマッパー
+│   ├── security/          # セキュリティ関連
+│   ├── cache/             # Redisキャッシュ実装
+│   └── util/              # インフラストラクチャユーティリティ
+│       └── UuidUtil.kt    # UUID変換ユーティリティ
+│
+└── presentation/          # プレゼンテーション層
+    ├── config/            # プレゼンテーション設定
+    ├── controller/        # APIコントローラー
+    │   ├── user/          # ユーザーコントローラー
+    │   ├── post/          # 投稿コントローラー
+    │   └── ...            # その他のコントローラー
+    ├── request/           # リクエストモデル
+    ├── response/          # レスポンスモデル
+    ├── advice/            # グローバル例外ハンドラー
+    └── filter/            # リクエストフィルター
 ```
 
-各モジュールは独自のビルドファイル（build.gradle.kts）を持ち、依存関係が明確に定義されます。この構成により、関心事の分離が強化され、大規模チームでの開発効率が向上します。
+この構造により、クリーンアーキテクチャの各レイヤーが明確に分離され、ドメイン中心の設計が実現できます。
 
 ## 9. UUID最適化ユーティリティ
 
