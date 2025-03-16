@@ -1,5 +1,5 @@
 ---
-description: 
+description: 設定に関するルール
 globs: backend/src/main/kotlin/com/example/xclone/common/config/*.kt
 alwaysApply: false
 ---
@@ -9,4 +9,6 @@ alwaysApply: false
 - @Configurationアノテーションを使用する
 - 環境変数は@Valueアノテーションで注入する
 - Bean定義は@Beanアノテーションで行う
-- プロパティは型安全に定義する 
+- プロパティは型安全に定義する
+- 環境ごとの設定は.env.localファイルで管理する
+- 機密情報は環境変数で注入する 

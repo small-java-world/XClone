@@ -1,6 +1,6 @@
 ---
 description: 永続化アダプターに関するルール
-globs: backend/src/main/kotlin/com/example/xclone/**/adapter/out/persistence/**/*.kt
+globs: backend/src/main/kotlin/com/example/xclone/infrastructure/persistence/**/*.kt
 alwaysApply: false
 ---
 # Persistence Adapter Rules
@@ -8,4 +8,7 @@ alwaysApply: false
 - @Repositoryアノテーションを使用する
 - jOOQのDSLContextを使用する
 - エンティティマッパーを使用してドメインモデルとの変換を行う
-- トランザクション制御はアプリケーションサービスに任せる 
+- トランザクション制御はアプリケーションサービスに任せる
+- UUIDはBINARY(16)型で保存し、効率的なインデックスのためにビットスワップを適用する
+- コルーチンを使用し、withContext(Dispatchers.IO)でIO処理を行う
+- 複合インデックスを適切に活用する 

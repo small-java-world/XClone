@@ -1,6 +1,6 @@
 ---
 description: アプリケーションサービスに関するルール
-globs: backend/src/main/kotlin/com/example/xclone/**/application/**/*.kt
+globs: backend/src/main/kotlin/com/example/xclone/application/**/*.kt
 alwaysApply: false
 ---
 # Application Service Rules
@@ -10,4 +10,7 @@ alwaysApply: false
 - 入力はXXXCommandクラスで受け取る
 - 出力はXXXResponseクラスで返す
 - トランザクション境界として機能する
-- ドメインモデルの生成・操作を行う 
+- ドメインモデルの生成・操作を行う
+- コルーチンを使用し、suspend関数として実装する
+- 例外はドメイン例外をスローする
+- 依存性はコンストラクタインジェクションで注入する 

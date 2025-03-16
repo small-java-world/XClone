@@ -1,6 +1,6 @@
 ---
 description: Webアダプターに関するルール
-globs: backend/src/main/kotlin/com/example/xclone/**/adapter/in/web/**/*.kt
+globs: backend/src/main/kotlin/com/example/xclone/presentation/controller/**/*.kt
 alwaysApply: false
 ---
 # Web Adapter Rules
@@ -8,6 +8,9 @@ alwaysApply: false
 - @RestControllerアノテーションを使用する
 - エンドポイントは/api/から始める
 - 入力はXXXRequestクラスで受け取る
-- 出力はXXXResponseDtoクラスで返す
+- 出力はXXXResponseクラスで返す
 - バリデーションは@Validアノテーションを使用する
-- 例外ハンドリングは@ExceptionHandlerで行う 
+- 例外ハンドリングは@ExceptionHandlerで行う
+- コルーチンを使用し、suspend関数として実装する
+- ResponseEntityを返す
+- ドキュメンテーションはOpenAPIアノテーションを使用する 

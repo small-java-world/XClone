@@ -9,4 +9,8 @@ alwaysApply: false
 - コンポーネントはatomic designに従って分類する
 - 状態管理はReact Hooksを使用する
 - APIクライアントは共通化する
-- 型定義はzodを使用する 
+- 型定義はzodを使用する
+- ユニットテストはVitestを使用する
+- E2EテストはPlaywrightを使用する
+- UIコンポーネントはモダンで美しいデザインを心がける
+- レスポンシブデザインを実装する 

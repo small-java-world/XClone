@@ -1,16 +1,17 @@
 ---
 description: ドメインモデルに関するルール
-globs: backend/src/main/kotlin/com/example/xclone/**/domain/model/*.kt
+globs: backend/src/main/kotlin/com/example/xclone/domain/**/*.kt
 alwaysApply: false
 ---
 # Domain Model Rules
 
 - エンティティはprivate constructorを使用し、ファクトリーメソッドで生成する
-- 値オブジェクトはdata classで実装する
+- 値オブジェクトはdata classで実装し、@JvmInline value classを活用する
 - ドメインロジックは必ずドメインモデル内に実装する
 - 外部依存を持たない純粋なドメインモデルとする
 - バリデーションはrequireを使用して実装する
-- IDはvalue classで実装する
+- IDはvalue classで実装し、UUIDを内部に保持する
 - 全てのプロパティはimmutableにする（valを使用）
 - データの変更が必要な場合は、新しいインスタンスを生成する
-- 副作用を持つ操作は明示的に命名されたメソッドで実装する 
+- 副作用を持つ操作は明示的に命名されたメソッドで実装する
+- リポジトリインターフェースはドメイン層で定義する 
