@@ -1,0 +1,226 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: jOOQの使用に関するルール
+globs: backend/src/main/kotlin/com/example/xclone/infrastructure/persistence/**/*.kt,backend/src/main/resources/db/migration/*.sql
+alwaysApply: false
+---
+# jOOQ Usage Rules
+
+## 1. 基本原則
+
+- 型安全なSQLを構築するためにjOOQを使用する
+- 文字列ベースのSQLは使用せず、生成されたメタデータクラスを使用する
+- コルーチンと組み合わせて非同期処理を実装する
+- トランザクション制御はアプリケーションサービス層で行う
+
+## 2. セットアップと設定
+
+### Gradleセットアップ
+```kotlin
+plugins {
+    kotlin("jvm")
+    id("org.jooq.jooq-codegen-gradle")
+}
+
+dependencies {
+    implementation("org.jooq:jooq:3.18.6")
+    implementation("org.jooq:jooq-meta:3.18.6")
+    implementation("org.jooq:jooq-codegen:3.18.6")
+    implementation("mysql:mysql-connector-java:8.0.33")
+    implementation("org.springframework.boot:spring-boot-starter-jooq:3.2.0")
+}
+
+jooq {
+    configurations {
+        create("main") {
+            generateSchemaSourceOnCompilation.set(true)
+            jdbc {
+                driver = "com.mysql.cj.jdbc.Driver"
+                url = "jdbc:mysql://localhost:3306/xclone"
+                user = "root"
+                password = "root"
+            }
+            generator {
+                database {
+                    name = "org.jooq.meta.mysql.MySQLDatabase"
+                    includes = ".*"
+                    excludes = "flyway_schema_history | jooq_.*"
+                }
+                target {
+                    packageName = "com.example.xclone.infrastructure.persistence.jooq.generated"
+                    directory = "${project.buildDir}/generated-src/jooq/main"
+                }
+            }
+        }
+    }
+}
+```
+
+### Spring Boot設定
+```kotlin
+@Configuration
+class JooqConfiguration(
+    private val dataSource: DataSource
+) {
+    @Bean
+    fun dslContext(): DSLContext {
+        return DSL.using(
+            dataSource,
+            SQLDialect.MYSQL
+        )
+    }
+}
+```
+
+## 3. クエリ実装ガイドライン
+
+### 基本的なクエリ
+```kotlin
+// SELECT
+val user = dsl
+    .selectFrom(USERS)
+    .where(USERS.ID.eq(id.toBytes()))
+    .fetchOneInto(UserRecord::class.java)
+    ?.let { UserMapper.toDomain(it) }
+
+// INSERT
+val record = dsl.newRecord(USERS).apply {
+    id = user.id.toBytes()
+    username = user.username.value
+    email = user.email.value
+}
+record.store()
+
+// UPDATE
+dsl.update(USERS)
+    .set(USERS.NAME, user.name)
+    .where(USERS.ID.eq(user.id.toBytes()))
+    .execute()
+
+// DELETE
+dsl.deleteFrom(USERS)
+    .where(USERS.ID.eq(id.toBytes()))
+    .execute()
+```
+
+### 結合とサブクエリ
+```kotlin
+// JOIN
+val result = dsl
+    .select(USERS.NAME, POSTS.CONTENT)
+    .from(USERS)
+    .join(POSTS).on(USERS.ID.eq(POSTS.USER_ID))
+    .where(USERS.ID.eq(userId.toBytes()))
+    .fetch()
+
+// サブクエリ
+val subquery = dsl
+    .select(POSTS.USER_ID)
+    .from(POSTS)
+    .where(POSTS.CREATED_AT.gt(LocalDate.now().minusDays(30)))
+
+val activeUsers = dsl
+    .selectFrom(USERS)
+    .where(USERS.ID.`in`(subquery))
+    .fetch()
+```
+
+### ページネーション
+```kotlin
+val result = dsl
+    .selectFrom(USERS)
+    .orderBy(USERS.CREATED_AT.desc())
+    .limit(pageSize)
+    .offset((page - 1) * pageSize)
+    .fetch()
+```
+
+## 4. エラー処理とトランザクション
+
+### エラー処理
+```kotlin
+try {
+    dsl.selectFrom(USERS)
+        .where(USERS.ID.eq(id.toBytes()))
+        .fetchOptional()
+        .orElseThrow { UserNotFoundException(id) }
+} catch (e: DataAccessException) {
+    throw RepositoryException("Failed to fetch user", e)
+}
+```
+
+### トランザクション
+```kotlin
+@Transactional
+suspend fun createUserWithSettings(user: User) = withContext(Dispatchers.IO) {
+    val userId = dsl.insertInto(USERS)
+        .set(/* user fields */)
+        .returning(USERS.ID)
+        .fetchOne()?.id
+        ?: throw RepositoryException("Failed to create user")
+
+    dsl.insertInto(USER_SETTINGS)
+        .set(USER_SETTINGS.USER_ID, userId)
+        .set(/* settings fields */)
+        .execute()
+}
+```
+
+## 5. パフォーマンス最適化
+
+### クエリ最適化
+- 必要なカラムのみを選択する
+- 適切なインデックスを使用する
+- N+1問題を回避するためにバッチ取得を使用する
+- 大量データの取得にはページネーションを適用する
+
+### バッチ処理
+```kotlin
+dsl.batch(
+    dsl.insertInto(USERS)
+        .columns(USERS.ID, USERS.USERNAME, USERS.EMAIL)
+        .values((null as ByteArray?), null, null)
+).apply {
+    users.forEach { user ->
+        add(arrayOf(
+            user.id.toBytes(),
+            user.username.value,
+            user.email.value
+        ))
+    }
+}.execute()
+```
+
+## 6. テスト
+
+### リポジトリテスト
+```kotlin
+@SpringBootTest
+class UserRepositoryTest {
+    @Autowired
+    private lateinit var dsl: DSLContext
+    
+    @Test
+    fun `should save and retrieve user`() = runBlocking {
+        // テストコード
+    }
+}
+```
+
+## 7. 命名規則
+
+### クラス名
+- リポジトリ実装: `MySQL{EntityName}Repository`
+- マッパー: `{EntityName}Mapper`
+- レコード: `{EntityName}Record`
+
+### メソッド名
+- 検索: `findBy{Field}`
+- 保存: `save`
+- 更新: `update`
+- 削除: `delete`
+- 存在確認: `existsBy{Field}` 

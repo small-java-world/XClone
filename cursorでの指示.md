@@ -7,3 +7,7 @@ DDDの境界付けられたコンテキストを基本的な分割ポイント�
 gradleの設定や処理に関するCursorのProject Rulesって充足してますか？
 
 テーブルとエンティティの関係に対するCursorのProject Rulesって存在してますか？
+
+jOOQで生成した
+
+jooq-cheatsheet.mdをCursorのProject Rulesから参照したいですが可能でしょうか

@@ -1,4 +1,9 @@
 ---
+description: 
+globs: 
+alwaysApply: false
+---
+---
 description: Webアダプターに関するルール
 globs: backend/src/main/kotlin/com/example/xclone/presentation/controller/**/*.kt
 alwaysApply: false

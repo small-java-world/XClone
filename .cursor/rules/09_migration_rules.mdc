@@ -1,4 +1,9 @@
 ---
+description: 
+globs: 
+alwaysApply: false
+---
+---
 description: マイグレーションに関するルール
 globs: backend/src/main/resources/db/migration/*.sql
 alwaysApply: false

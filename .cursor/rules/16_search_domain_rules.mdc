@@ -4,7 +4,7 @@ globs: backend/src/main/kotlin/com/example/xclone/domain/search/**/*.kt,backend/
 alwaysApply: false
 ---
 ---
-description: 検索ドメインに関するルール
+description:  
 globs: backend/src/main/kotlin/com/example/xclone/domain/search/**/*.kt,backend/src/main/kotlin/com/example/xclone/application/search/**/*.kt
 alwaysApply: false
 ---

@@ -1,4 +1,9 @@
 ---
+description: 
+globs: 
+alwaysApply: false
+---
+---
 description: アプリケーションサービスに関するルール
 globs: backend/src/main/kotlin/com/example/xclone/application/**/*.kt
 alwaysApply: false
