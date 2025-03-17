@@ -1,0 +1,98 @@
+---
+description: WebSocketの実装に関するルール
+globs: backend/src/main/kotlin/com/example/xclone/presentation/websocket/**/*.kt,backend/src/main/kotlin/com/example/xclone/infrastructure/websocket/**/*.kt
+alwaysApply: false
+---
+# WebSocket Rules
+
+## 1. 基本原則
+
+- リアルタイム通信が必要な機能にのみWebSocketを使用する
+- WebSocketセッションは適切に管理し、メモリリークを防ぐ
+- メッセージのシリアライズ/デシリアライズには型安全な方法を使用する
+- エラーハンドリングを適切に実装する
+
+## 2. WebSocket設定
+
+```kotlin
+@Configuration
+@EnableWebSocket
+class WebSocketConfig : WebSocketConfigurer {
+    override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
+        registry.addHandler(chatWebSocketHandler, "/ws/chat")
+            .setAllowedOrigins("*")
+    }
+}
+```
+
+## 3. WebSocketハンドラー実装
+
+```kotlin
+@Component
+class ChatWebSocketHandler : WebSocketHandler {
+    private val sessions = ConcurrentHashMap<String, WebSocketSession>()
+    
+    override fun afterConnectionEstablished(session: WebSocketSession) {
+        val userId = extractUserId(session)
+        sessions[userId] = session
+    }
+    
+    override fun handleMessage(session: WebSocketSession, message: WebSocketMessage<*>) {
+        // メッセージ処理
+    }
+    
+    override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+        val userId = extractUserId(session)
+        sessions.remove(userId)
+    }
+}
+```
+
+## 4. メッセージ形式
+
+```kotlin
+data class WebSocketMessage(
+    val type: MessageType,
+    val payload: Any,
+    val timestamp: Instant = Instant.now()
+)
+
+enum class MessageType {
+    CHAT_MESSAGE,
+    TYPING_STATUS,
+    READ_RECEIPT,
+    PRESENCE_UPDATE
+}
+```
+
+## 5. エラーハンドリング
+
+```kotlin
+override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
+    logger.error("WebSocket transport error: ${exception.message}", exception)
+    session.close(CloseStatus.SERVER_ERROR)
+}
+```
+
+## 6. セキュリティ
+
+- WebSocketハンドシェイク時に認証を実施
+- メッセージにJWTトークンを含める
+- 接続元のオリジンを適切に制限
+
+## 7. スケーラビリティ
+
+- WebSocketセッションをRedisで管理
+- 複数サーバー間でのメッセージブロードキャストにRedis Pub/Subを使用
+
+## 8. テスト
+
+```kotlin
+@SpringBootTest
+class WebSocketTest {
+    @Test
+    fun `should handle websocket connection`() {
+        // WebSocketクライアントを使用したテスト
+    }
+}
+``` 

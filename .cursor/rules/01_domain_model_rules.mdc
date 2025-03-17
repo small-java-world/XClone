@@ -1,4 +1,9 @@
 ---
+description: 
+globs: 
+alwaysApply: false
+---
+---
 description: ドメインモデルに関するルール
 globs: backend/src/main/kotlin/com/example/xclone/domain/**/*.kt
 alwaysApply: false

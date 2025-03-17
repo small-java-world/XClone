@@ -1,0 +1,197 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: バックエンドのテストに関するルール
+globs: backend/src/test/**/*.kt
+alwaysApply: false
+---
+# Backend Test Rules
+
+## 1. テストの種類と構成
+
+### 1.1 ユニットテスト
+- ドメインモデルのテスト
+- アプリケーションサービスのテスト
+- インフラストラクチャ層のテスト
+
+### 1.2 統合テスト
+- WebSocketの統合テスト
+- データベースの統合テスト
+- 外部APIの統合テスト
+
+### 1.3 E2Eテスト
+- ユースケースシナリオのテスト
+- WebSocket通信のE2Eテスト
+
+## 2. テストフレームワーク
+
+- Kotestを使用
+- Mockkを使用してモックを作成
+- TestContainersを使用してインテグレーションテスト
+
+## 3. テストの命名規則
+
+### 3.1 テストクラス
+- テスト対象クラス名 + Test
+```kotlin
+class UserServiceTest
+class ChatRoomRepositoryTest
+```
+
+### 3.2 テストメソッド
+- テストシナリオを説明する名前
+```kotlin
+@Test
+fun `should create chat room when valid request is provided`()
+
+@Test
+fun `should throw exception when user is not found`()
+```
+
+## 4. テストの実装パターン
+
+### 4.1 Given-When-Then パターン
+```kotlin
+@Test
+fun `should send message to chat room`() {
+    // Given
+    val chatRoom = ChatRoom(id = ChatRoomId(), name = "Test Room")
+    val sender = User(id = UserId(), name = "Test User")
+    val message = "Hello, World!"
+    
+    // When
+    val result = chatService.sendMessage(chatRoom.id, sender.id, message)
+    
+    // Then
+    assertThat(result).isNotNull()
+    assertThat(result.content).isEqualTo(message)
+}
+```
+
+### 4.2 WebSocketテスト
+```kotlin
+@Test
+fun `should handle WebSocket connection and message exchange`() {
+    // Given
+    val server = TestWebSocketServer()
+    val client = TestWebSocketClient()
+    
+    // When
+    client.connect()
+    client.send("Hello")
+    
+    // Then
+    val received = server.awaitMessage()
+    assertThat(received).isEqualTo("Hello")
+}
+```
+
+## 5. モック化とスタブ
+
+### 5.1 Mockk の使用
+```kotlin
+@Test
+fun `should notify users when new message arrives`() {
+    // Given
+    val notificationService = mockk<NotificationService>()
+    every { notificationService.notify(any(), any()) } returns Unit
+    
+    // When
+    chatService.handleNewMessage(message)
+    
+    // Then
+    verify { notificationService.notify(message.roomId, message) }
+}
+```
+
+### 5.2 テストデータビルダー
+```kotlin
+class UserBuilder {
+    private var id = UserId()
+    private var name = "Test User"
+    
+    fun withId(id: UserId) = apply { this.id = id }
+    fun withName(name: String) = apply { this.name = name }
+    fun build() = User(id = id, name = name)
+}
+```
+
+## 6. データベーステスト
+
+### 6.1 テストコンテナ
+```kotlin
+@TestContainer
+val mysqlContainer = MySQLContainer<Nothing>("mysql:8.0").apply {
+    withDatabaseName("testdb")
+    withUsername("test")
+    withPassword("test")
+}
+```
+
+### 6.2 テストデータセットアップ
+```kotlin
+@Test
+fun `should retrieve chat messages`() {
+    // Given
+    val room = testDataHelper.createChatRoom()
+    val messages = testDataHelper.createMessages(room.id, count = 5)
+    
+    // When
+    val result = chatRepository.findByRoomId(room.id)
+    
+    // Then
+    assertThat(result).hasSize(5)
+}
+```
+
+## 7. 非同期テスト
+
+### 7.1 コルーチンテスト
+```kotlin
+@Test
+fun `should handle concurrent message sending`() = runTest {
+    // Given
+    val room = ChatRoom(id = ChatRoomId(), name = "Test Room")
+    val users = List(10) { UserBuilder().build() }
+    
+    // When
+    val jobs = users.map { user ->
+        launch { chatService.sendMessage(room.id, user.id, "Message from ${user.name}") }
+    }
+    jobs.joinAll()
+    
+    // Then
+    val messages = chatRepository.findByRoomId(room.id)
+    assertThat(messages).hasSize(10)
+}
+```
+
+### 7.2 WebSocketストリームテスト
+```kotlin
+@Test
+fun `should handle message stream`() = runTest {
+    // Given
+    val messageFlow = flow {
+        emit("Message 1")
+        emit("Message 2")
+        emit("Message 3")
+    }
+    
+    // When
+    val messages = mutableListOf<String>()
+    messageFlow.collect { messages.add(it) }
+    
+    // Then
+    assertThat(messages).containsExactly("Message 1", "Message 2", "Message 3")
+}
+```
+
+## 8. テストカバレッジ
+
+- ドメインモデル: 100%のカバレッジを目指す
+- アプリケーションサービス: 90%以上のカバレッジ
+- インフラストラクチャ層: 80%以上のカバレッジ
+- 統合テスト: 主要なユースケースをカバー 
