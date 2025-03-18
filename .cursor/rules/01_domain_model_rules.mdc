@@ -3,20 +3,26 @@ description:
 globs: 
 alwaysApply: false
 ---
----
-description: ドメインモデルに関するルール
-globs: backend/src/main/kotlin/com/example/xclone/domain/**/*.kt
-alwaysApply: false
----
 # Domain Model Rules
 
-- エンティティはprivate constructorを使用し、ファクトリーメソッドで生成する
-- 値オブジェクトはdata classで実装し、@JvmInline value classを活用する
-- ドメインロジックは必ずドメインモデル内に実装する
-- 外部依存を持たない純粋なドメインモデルとする
-- バリデーションはrequireを使用して実装する
-- IDはvalue classで実装し、UUIDを内部に保持する
+## エンティティ (Entity)
+- エンティティはprivate constructorを使用し、以下のファクトリーメソッドを必須とする
+  - `create`: 新規作成用のファクトリーメソッド
+  - `reconstruct`: 永続化層からの再構築用のファクトリーメソッド
+  - `copy`: 一部プロパティを変更した新しいインスタンスを生成するメソッド
 - 全てのプロパティはimmutableにする（valを使用）
-- データの変更が必要な場合は、新しいインスタンスを生成する
+- IDはvalue classで実装し、UUIDを内部に保持する
 - 副作用を持つ操作は明示的に命名されたメソッドで実装する
-- リポジトリインターフェースはドメイン層で定義する 
+- バリデーションはrequireを使用して実装する
+
+## 値オブジェクト (Value Object)
+- 値オブジェクトはdata classで実装し、可能な限り@JvmInline value classを活用する
+- 全てのプロパティはimmutableにする（valを使用）
+- 等価性は全ての属性に基づいて判断する（data classのequalsを利用）
+- バリデーションはprivate constructorとファクトリーメソッドで実装する
+  - `of`: 文字列や数値などの基本型から値オブジェクトを生成
+  - `reconstruct`: 永続化層からの再構築用（バリデーションをスキップ）
+- 値の変更が必要な場合は、新しいインスタンスを生成する
+- 値オブジェクト同士の演算が必要な場合は、演算メソッドを値オブジェクト自身に実装する
+- 複数の値オブジェクトを組み合わせて新しい値オブジェクトを生成する場合は、
+  適切な名前のファクトリーメソッドを実装する

@@ -1,4 +1,9 @@
 ---
+description: 
+globs: 
+alwaysApply: false
+---
+---
 description: WebSocketの実装に関するルール
 globs: backend/src/main/kotlin/com/example/xclone/presentation/websocket/**/*.kt,backend/src/main/kotlin/com/example/xclone/infrastructure/websocket/**/*.kt
 alwaysApply: false

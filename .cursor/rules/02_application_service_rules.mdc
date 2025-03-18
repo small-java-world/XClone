@@ -3,11 +3,6 @@ description:
 globs: 
 alwaysApply: false
 ---
----
-description: アプリケーションサービスに関するルール
-globs: backend/src/main/kotlin/com/example/xclone/application/**/*.kt
-alwaysApply: false
----
 # Application Service Rules
 
 - UseCaseインターフェースを実装する
@@ -15,7 +10,12 @@ alwaysApply: false
 - 入力はXXXCommandクラスで受け取る
 - 出力はXXXResponseクラスで返す
 - トランザクション境界として機能する
-- ドメインモデルの生成・操作を行う
+- ドメインオブジェクト間の調整（オーケストレーション）を行う
+  - 複数の集約にまたがる操作の制御
+  - ドメインサービスの呼び出し
+  - リポジトリの呼び出し
+  - トランザクション管理
+- ドメインモデルの生成・操作は直接行わず、ドメイン層のファクトリーメソッドやドメインサービスを使用する
 - コルーチンを使用し、suspend関数として実装する
 - 例外はドメイン例外をスローする
-- 依存性はコンストラクタインジェクションで注入する 
+- 依存性はコンストラクタインジェクションで注入する

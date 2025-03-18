@@ -1,4 +1,9 @@
 ---
+description: 
+globs: 
+alwaysApply: true
+---
+---
 description: 共通のコーディングルール
 globs: backend/src/main/kotlin/com/example/xclone/**/*.kt,frontend/src/**/*.{ts,tsx}
 alwaysApply: true
@@ -58,34 +63,34 @@ backend/src/main/kotlin/com/example/xclone/
 │   ├── common/            # 共通のドメインコンポーネント
 │   │   ├── exception/     # ドメイン例外
 │   │   └── valueobject/   # 共通の値オブジェクト
-│   ├── user/              # ユーザードメイン
+│   ├── [bounded-context]/ # 境界付けられたコンテキスト（各ドメインのルートエンティティ）
 │   │   ├── entity/        # エンティティ
 │   │   ├── repository/    # リポジトリインターフェース
 │   │   ├── service/       # ドメインサービス
 │   │   └── valueobject/   # 値オブジェクト
-│   ├── post/              # 投稿ドメイン
-│   ├── follow/            # フォロードメイン
-│   ├── notification/      # 通知ドメイン
-│   └── timeline/          # タイムラインドメイン
+│   ├── [bounded-context]/ # 別の境界付けられたコンテキスト
+│   ├── [bounded-context]/ # 別の境界付けられたコンテキスト
+│   ├── [bounded-context]/ # 別の境界付けられたコンテキスト
+│   └── [bounded-context]/ # 別の境界付けられたコンテキスト
 │
 ├── application/           # アプリケーション層
 │   ├── config/            # アプリケーション設定
-│   ├── user/              # ユーザードメインのユースケース
+│   ├── [bounded-context]/ # 境界付けられたコンテキストのユースケース
 │   │   ├── command/       # コマンドオブジェクト
-│   │   ├── dto/           # レスポンスDTO
-│   │   └── usecase/       # ユースケースクラス
-│   ├── post/              # 投稿ドメインのユースケース
-│   ├── follow/            # フォロードメインのユースケース
-│   ├── notification/      # 通知ドメインのユースケース
-│   └── timeline/          # タイムラインドメインのユースケース
+│   │   ├── dto/          # レスポンスDTO
+│   │   └── usecase/      # ユースケースクラス
+│   ├── [bounded-context]/ # 別の境界付けられたコンテキストのユースケース
+│   ├── [bounded-context]/ # 別の境界付けられたコンテキストのユースケース
+│   ├── [bounded-context]/ # 別の境界付けられたコンテキストのユースケース
+│   └── [bounded-context]/ # 別の境界付けられたコンテキストのユースケース
 │
 ├── infrastructure/        # インフラストラクチャ層
 │   ├── config/            # 技術的な設定
 │   ├── persistence/       # 永続化の実装
 │   │   ├── jooq/          # jOOQ関連の設定
 │   │   ├── repository/    # リポジトリ実装
-│   │   │   ├── user/      # ユーザーリポジトリ実装
-│   │   │   ├── post/      # 投稿リポジトリ実装
+│   │   │   ├── [bounded-context]/ # 境界付けられたコンテキストのリポジトリ実装
+│   │   │   ├── [bounded-context]/ # 別の境界付けられたコンテキストのリポジトリ実装
 │   │   │   └── ...        # その他のリポジトリ実装
 │   │   └── mapper/        # エンティティとデータベースレコードのマッパー
 │   ├── security/          # セキュリティ関連
@@ -96,8 +101,8 @@ backend/src/main/kotlin/com/example/xclone/
 └── presentation/          # プレゼンテーション層
     ├── config/            # プレゼンテーション設定
     ├── controller/        # APIコントローラー
-    │   ├── user/          # ユーザーコントローラー
-    │   ├── post/          # 投稿コントローラー
+    │   ├── [bounded-context]/ # 境界付けられたコンテキストのコントローラー
+    │   ├── [bounded-context]/ # 別の境界付けられたコンテキストのコントローラー
     │   └── ...            # その他のコントローラー
     ├── request/           # リクエストモデル
     ├── response/          # レスポンスモデル

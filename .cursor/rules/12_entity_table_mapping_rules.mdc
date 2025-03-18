@@ -4,6 +4,11 @@ globs:
 alwaysApply: false
 ---
 ---
+description: 
+globs: 
+alwaysApply: false
+---
+---
 description: テーブルとエンティティの対応関係に関するルール
 globs: backend/src/main/kotlin/com/example/xclone/domain/**/entity/*.kt,backend/src/main/kotlin/com/example/xclone/infrastructure/persistence/**/*.kt,backend/src/main/resources/db/migration/*.sql
 alwaysApply: false

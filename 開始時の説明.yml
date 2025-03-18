@@ -76,3 +76,22 @@ DDDの原則に照らし合わせて、コントローラで値オブジェク�
 
 公開APIの形式（JSON/XMLなど）とドメインモデルは必ずしも一致しないため、DTOやコマンドオブジェクトを使用して変換するのが一般的です
 ただし、値オブジェクトのみを使用して簡易的な変換を行うことは有効な選択肢です
+
+
+| ルール名 | 対象パス |
+| ---- | ---- |
+| [01_domain_model_rules](#01_domain_model_rulesmdc) | backend/src/main/kotlin/com/example/lineclone/domain/**/*.kt |
+| [02_application_service_rules](#02_application_service_rulesmdc) | backend/src/main/kotlin/com/example/lineclone/application/**/*.kt |
+| [03_web_adapter_rules](#03_web_adapter_rulesmdc) | backend/src/main/kotlin/com/example/lineclone/presentation/**/*.kt |
+| [04_persistence_adapter_rules](#04_persistence_adapter_rulesmdc) | backend/src/main/kotlin/com/example/lineclone/infrastructure/persistence/**/*.kt |
+| [05_backend_test_rules](#05_backend_test_rulesmdc) | backend/src/test/**/*.kt |
+| [06_frontend_test_rules](#06_frontend_test_rulesmdc) | frontend/src/**/*.test.{ts,tsx} |
+| [07_configuration_rules](#07_configuration_rulesmdc) | backend/src/main/kotlin/com/example/lineclone/infrastructure/config/**/*.kt |
+| [08_storage_rules](#08_storage_rulesmdc) | backend/src/main/kotlin/com/example/lineclone/infrastructure/storage/**/*.kt |
+| [08_frontend_rules](#08_frontend_rulesmdc) | frontend/src/**/*.{ts,tsx} |
+| [09_migration_rules](#09_migration_rulesmdc) | backend/src/main/resources/db/migration/*.sql |
+| [10_docker_rules](#10_docker_rulesmdc) | Dockerfile,docker-compose.yml |
+| [11_gradle_rules](#11_gradle_rulesmdc) | build.gradle.kts,settings.gradle.kts,gradle/**/*.{gradle,kts} |
+| [12_entity_table_mapping_rules](#12_entity_table_mapping_rulesmdc) | backend/src/main/kotlin/com/example/lineclone/infrastructure/persistence/**/*.kt |
+| [13_jooq_rules](#13_jooq_rulesmdc) | backend/src/main/kotlin/com/example/lineclone/infrastructure/persistence/**/*.kt |
+| [14_websocket_rules](#14_websocket_rulesmdc) | backend/src/main/kotlin/com/example/lineclone/infrastructure/websocket/**/*.kt |
